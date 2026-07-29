@@ -31,7 +31,6 @@ cung_to_gua = {1: "坎", 2: "坤", 3: "震", 4: "巽", 5: "", 6: "乾", 7: "兑"
 # 2. LOGIC TÍNH LỊCH & ĐỘN CỤC CHUẨN XÁC
 # ==========================================
 def get_wushu_dun(day_stem, hour_branch):
-    """Tính Can Giờ dựa trên Can Ngày (Ngũ Thử Độn)"""
     day_idx = thien_can.index(day_stem) % 5
     hour_idx = dia_chi.index(hour_branch)
     start_stem_idx = (day_idx * 2) % 10
@@ -39,13 +38,11 @@ def get_wushu_dun(day_stem, hour_branch):
     return thien_can[target_stem_idx]
 
 def get_xun_leader(can, chi):
-    """Tìm Tuần Thủ (Giáp) của một Can Chi"""
     idx_can, idx_chi = thien_can.index(can), dia_chi.index(chi)
     chi_tuan = dia_chi[(idx_chi - idx_can) % 12]
     return {"子":"戊", "戌":"己", "申":"庚", "午":"辛", "辰":"壬", "寅":"癸"}[chi_tuan]
 
 def get_wolong_calendar_data(lunar_month, lunar_day):
-    """Nội suy Bảng 1 Lịch Chân Truyền của tác giả Hojo Ikko"""
     m_offset = (lunar_month - 11) % 12
     abs_day = m_offset * 30 + (lunar_day - 1)
     
@@ -72,7 +69,6 @@ def get_wolong_calendar_data(lunar_month, lunar_day):
 def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
     can_gio, chi_gio = hoa_giap_gio[0], hoa_giap_gio[1]
     
-    # Khởi tạo data với cờ (flag) in đậm cho Can
     cung_data = {i: {'dia': '', 'mon': '', 'thien': '', 'is_dia_bold': False, 'is_thien_bold': False} for i in range(1, 10)}
     
     # --- BƯỚC 3: DỰNG ĐỊA BÀN ---
@@ -89,19 +85,23 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
         if current_val > 9: current_val = 1
         if current_val < 1: current_val = 9
 
-    # Tìm vị trí Giáp (Tướng)
     luc_nghi_gio = get_xun_leader(can_gio, chi_gio)
     p_circle = [c for c, can in dia_ban.items() if can == luc_nghi_gio][0]
-
-    # --- BƯỚC 4: DỰNG THIÊN BÀN ---
     p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
     p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
 
+    # --- BƯỚC 4: DỰNG THIÊN BÀN (ĐÃ FIX THEO SÁCH) ---
     if p_circle == 5:
-        # Nếu Tướng kẹt ở Trung cung thì Thiên Bàn giữ nguyên như Địa Bàn
-        for i in range(1, 10): cung_data[i]['thien'] = dia_ban[i]
+        # Giáp ở Trung Cung: Các can khác giữ nguyên (Thiên = Địa)
+        for i in range(1, 10): 
+            cung_data[i]['thien'] = dia_ban[i]
+        
+        # Riêng Giáp (Tướng) bay ra đè lên Can Giờ
+        if p_hour_stem != 5:
+            cung_data[p_hour_stem]['thien'] = luc_nghi_gio
+            cung_data[5]['thien'] = "" # Trung cung trống vì Tướng đã đi
     else:
-        # Xoay vòng ngoài
+        # Xoay vòng ngoài bình thường
         idx_source = WOLONG_OUTER_PALACES.index(p_circle)
         idx_target = WOLONG_OUTER_PALACES.index(p_hour_stem) if p_hour_stem != 5 else idx_source
         offset = (idx_target - idx_source) % 8
@@ -112,7 +112,7 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
             cung_data[cung_hien_tai]['thien'] = dia_ban[cung_nguon]
         cung_data[5]['thien'] = dia_ban[5]
 
-    # Bật cờ (flag) in đậm cho Thiên/Địa Can thay vì dùng ◯
+    # Bật cờ in đậm cho Tuần Thủ (Giáp)
     cung_data[p_hour_stem]['is_thien_bold'] = True
     cung_data[p_circle]['is_dia_bold'] = True
 
@@ -166,7 +166,6 @@ def render_html_table(cung_data):
             gua_char = cung_to_gua[p]
             gua_html = f"<div class='bagua-mark'>{gua_char}</div>" if gua_char else ""
 
-            # Xử lý In đậm cho Can thay vì dùng vòng tròn
             thien_weight = "bold" if d['is_thien_bold'] else "normal"
             dia_weight = "bold" if d['is_dia_bold'] else "normal"
 
@@ -174,9 +173,14 @@ def render_html_table(cung_data):
             dia_html = f"<span style='font-weight: {dia_weight};'>{d['dia']}</span>"
             
             if p == 5:
+                # Xử lý riêng Trung Cung: Có thể Thiên Bàn rỗng
+                tc_thien_html = f"<div style='font-size: 18px; font-weight: {thien_weight}; color: #b30000; text-align: center; margin-bottom: 30px;'>{d['thien']}</div>" if d['thien'] else ""
                 html += f"""
                 <td class="qmdj-td">
-                    <div style="position: absolute; bottom: 6px; right: 10px; font-size: 16px; font-weight: {dia_weight}; color: #b30000;">{d['dia']}</div>
+                    <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                        {tc_thien_html}
+                        <div style="font-size: 16px; font-weight: {dia_weight}; color: #b30000; text-align: center;">{d['dia']}</div>
+                    </div>
                 </td>"""
             else:
                 html += f"""
@@ -205,10 +209,8 @@ def get_current_vn_time():
 if "init_dt" not in st.session_state:
     st.session_state.init_dt = get_current_vn_time()
 
-# --- GIAO DIỆN NHẬP LIỆU GỌN NHẸ (ĐÃ FIX LỊCH VÀ NÚT CHỌN) ---
 col1, col2, col3 = st.columns(3)
 with col1:
-    # Mở rộng dải năm từ 1950 đến 2050
     selected_date = st.date_input(
         "Ngày", 
         value=st.session_state.init_dt.date(),
@@ -216,15 +218,12 @@ with col1:
         max_value=date(2050, 12, 31)
     )
 with col2:
-    # Dropdown (selectbox) chọn giờ từ 0 đến 23
     selected_hour = st.selectbox("Giờ", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3:
-    # Dropdown (selectbox) chọn phút từ 0 đến 59
     selected_minute = st.selectbox("Phút", options=list(range(60)), index=st.session_state.init_dt.minute)
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 
-# Xử lý qua ngày mới nếu >= 23h (Giờ Tý)
 if user_dt.hour >= 23:
     actual_date = user_dt.date() + timedelta(days=1)
     chi_gio_idx = 0 
@@ -234,19 +233,14 @@ else:
 
 chi_gio = dia_chi[chi_gio_idx]
 
-# Tính Lịch Âm bằng hàm chuẩn của sxtwl
 day_obj = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
 lunar_m = day_obj.getLunarMonth()
 lunar_d = day_obj.getLunarDay()
 
-# Lấy dữ liệu Chân Truyền Lịch
 wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(lunar_m, lunar_d)
-
-# Tính Can Giờ
 can_gio = get_wushu_dun(wl_can, chi_gio)
 hoa_giap_hien_tai = can_gio + chi_gio
     
-# Tính Cục Số
 yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
 base_ju = solar_term_ju[wl_jieqi][yuan_idx]
 hour_stem_offset = {"甲":0, "己":0, "乙":1, "庚":1, "丙":2, "辛":2, "丁":3, "壬":3, "戊":4, "癸":4}[can_gio]
@@ -257,15 +251,12 @@ else:
     wl_ju = (base_ju - hour_stem_offset - 1) % 9 + 1
     if wl_ju <= 0: wl_ju += 9
 
-# Lập Quẻ
 data = lap_que_wolong(wl_can, hoa_giap_hien_tai, wl_dun, wl_ju)
 
-# --- Render Text Header Mới ---
 chuoi_cuc = f"{wl_dun}{wl_ju}局"
-bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日"
-hour_str = f"{hoa_giap_hien_tai}时"
+bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {hoa_giap_hien_tai}时"
 
-title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi} | {hour_str}</h3>"
+title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>"
 sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {chuoi_cuc}</h4>"
 
 qimen_board_html = render_html_table(data)
