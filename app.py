@@ -1,6 +1,6 @@
 import streamlit as st
 import sxtwl
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 
 st.set_page_config(page_title="Kỳ Môn Độn Giáp - Ngọa Long", layout="wide", initial_sidebar_state="collapsed")
 
@@ -112,7 +112,7 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
             cung_data[cung_hien_tai]['thien'] = dia_ban[cung_nguon]
         cung_data[5]['thien'] = dia_ban[5]
 
-    # Bật cờ (flag) in đậm cho Thiên/Địa Can tương ứng thay vì dùng ◯
+    # Bật cờ (flag) in đậm cho Thiên/Địa Can thay vì dùng ◯
     cung_data[p_hour_stem]['is_thien_bold'] = True
     cung_data[p_circle]['is_dia_bold'] = True
 
@@ -205,14 +205,22 @@ def get_current_vn_time():
 if "init_dt" not in st.session_state:
     st.session_state.init_dt = get_current_vn_time()
 
-# --- GIAO DIỆN NHẬP LIỆU GỌN NHẸ ---
+# --- GIAO DIỆN NHẬP LIỆU GỌN NHẸ (ĐÃ FIX LỊCH VÀ NÚT CHỌN) ---
 col1, col2, col3 = st.columns(3)
 with col1:
-    selected_date = st.date_input("Ngày", st.session_state.init_dt.date())
+    # Mở rộng dải năm từ 1950 đến 2050
+    selected_date = st.date_input(
+        "Ngày", 
+        value=st.session_state.init_dt.date(),
+        min_value=date(1950, 1, 1),
+        max_value=date(2050, 12, 31)
+    )
 with col2:
-    selected_hour = st.number_input("Giờ", min_value=0, max_value=23, value=st.session_state.init_dt.hour)
+    # Dropdown (selectbox) chọn giờ từ 0 đến 23
+    selected_hour = st.selectbox("Giờ", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3:
-    selected_minute = st.number_input("Phút", min_value=0, max_value=59, value=st.session_state.init_dt.minute)
+    # Dropdown (selectbox) chọn phút từ 0 đến 59
+    selected_minute = st.selectbox("Phút", options=list(range(60)), index=st.session_state.init_dt.minute)
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 
