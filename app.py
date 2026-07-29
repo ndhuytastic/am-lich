@@ -2,7 +2,7 @@ import streamlit as st
 import sxtwl
 from datetime import datetime, timedelta, timezone
 
-st.set_page_config(page_title="Kỳ Môn Độn Giáp Chân Truyền", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Kỳ Môn Độn Giáp - Ngọa Long", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
 # 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN
@@ -39,7 +39,7 @@ def get_wushu_dun(day_stem, hour_branch):
     return thien_can[target_stem_idx]
 
 def get_xun_leader(can, chi):
-    """Tìm Tuần Thủ (Giáp ◯) của một Can Chi"""
+    """Tìm Tuần Thủ (Giáp) của một Can Chi"""
     idx_can, idx_chi = thien_can.index(can), dia_chi.index(chi)
     chi_tuan = dia_chi[(idx_chi - idx_can) % 12]
     return {"子":"戊", "戌":"己", "申":"庚", "午":"辛", "辰":"壬", "寅":"癸"}[chi_tuan]
@@ -71,7 +71,9 @@ def get_wolong_calendar_data(lunar_month, lunar_day):
 # ==========================================
 def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
     can_gio, chi_gio = hoa_giap_gio[0], hoa_giap_gio[1]
-    cung_data = {i: {'dia': '', 'mon': '', 'thien': ''} for i in range(1, 10)}
+    
+    # Khởi tạo data với cờ (flag) in đậm cho Can
+    cung_data = {i: {'dia': '', 'mon': '', 'thien': '', 'is_dia_bold': False, 'is_thien_bold': False} for i in range(1, 10)}
     
     # --- BƯỚC 3: DỰNG ĐỊA BÀN ---
     trung_cung_val = (10 - ju_num) if dun_type == "阳遁" else ju_num
@@ -87,7 +89,7 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
         if current_val > 9: current_val = 1
         if current_val < 1: current_val = 9
 
-    # Tìm vị trí Giáp ◯
+    # Tìm vị trí Giáp (Tướng)
     luc_nghi_gio = get_xun_leader(can_gio, chi_gio)
     p_circle = [c for c, can in dia_ban.items() if can == luc_nghi_gio][0]
 
@@ -110,9 +112,9 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
             cung_data[cung_hien_tai]['thien'] = dia_ban[cung_nguon]
         cung_data[5]['thien'] = dia_ban[5]
 
-    # Đánh dấu ◯ cho Thiên/Địa Can
-    cung_data[p_hour_stem]['thien'] += "◯"
-    cung_data[p_circle]['dia'] += "◯"
+    # Bật cờ (flag) in đậm cho Thiên/Địa Can tương ứng thay vì dùng ◯
+    cung_data[p_hour_stem]['is_thien_bold'] = True
+    cung_data[p_circle]['is_dia_bold'] = True
 
     # --- BƯỚC 5: AN BÁT MÔN ---
     if p_circle == 5:
@@ -148,10 +150,9 @@ def render_html_table(cung_data):
         .qmdj-table { border-collapse: collapse; width: 100%; max-width: 480px; min-width: 320px; height: 360px; table-layout: fixed; font-size: 15px; background-color: #fefefe; margin: 0 auto; }
         .qmdj-td { border: 1px solid #bfbfbf; width: 33.33%; padding: 8px 4px 18px 4px; position: relative; vertical-align: top; overflow: visible; }
         .row-top, .row-bot { display: flex; align-items: center; justify-content: flex-start; }
-        .item-left { width: 55px; text-align: left; margin-left: 2px; flex-shrink: 0; line-height: 1.2; font-weight: normal; color: #333; }
-        .item-right { display: flex; align-items: center; flex-wrap: wrap; flex-grow: 1; gap: 2px 3px; line-height: 1.2; margin-left: 10px; font-weight: bold; color: #b30000; font-size: 18px; }
+        .item-left { width: 55px; text-align: left; margin-left: 2px; flex-shrink: 0; line-height: 1.2; font-weight: bold; color: #333; }
+        .item-right { display: flex; align-items: center; flex-wrap: wrap; flex-grow: 1; gap: 2px 3px; line-height: 1.2; margin-left: 10px; color: #b30000; font-size: 18px; }
         .wolong-stem { display: inline-block; padding: 2px 4px; }
-        .circle-mark { font-size: 14px; margin-left: 2px; color: #000; }
         .bagua-mark { position: absolute; bottom: 2px; right: 6px; color: #1a1a1a; font-size: 13px; z-index: 20; }
         .wolong-spacing { margin-top: 15px; margin-bottom: 25px; }
     </style>
@@ -165,13 +166,17 @@ def render_html_table(cung_data):
             gua_char = cung_to_gua[p]
             gua_html = f"<div class='bagua-mark'>{gua_char}</div>" if gua_char else ""
 
-            thien_html = d['thien'].replace("◯", "<span class='circle-mark'>◯</span>")
-            dia_html = d['dia'].replace("◯", "<span class='circle-mark'>◯</span>")
+            # Xử lý In đậm cho Can thay vì dùng vòng tròn
+            thien_weight = "bold" if d['is_thien_bold'] else "normal"
+            dia_weight = "bold" if d['is_dia_bold'] else "normal"
+
+            thien_html = f"<span style='font-weight: {thien_weight};'>{d['thien']}</span>"
+            dia_html = f"<span style='font-weight: {dia_weight};'>{d['dia']}</span>"
             
             if p == 5:
                 html += f"""
                 <td class="qmdj-td">
-                    <div style="position: absolute; bottom: 6px; right: 10px; font-size: 16px; font-weight: bold; color: #b30000;">{dia_html}</div>
+                    <div style="position: absolute; bottom: 6px; right: 10px; font-size: 16px; font-weight: {dia_weight}; color: #b30000;">{d['dia']}</div>
                 </td>"""
             else:
                 html += f"""
@@ -211,7 +216,7 @@ with col3:
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 
-# Xử lý qua ngày mới nếu >= 23h
+# Xử lý qua ngày mới nếu >= 23h (Giờ Tý)
 if user_dt.hour >= 23:
     actual_date = user_dt.date() + timedelta(days=1)
     chi_gio_idx = 0 
@@ -247,13 +252,13 @@ else:
 # Lập Quẻ
 data = lap_que_wolong(wl_can, hoa_giap_hien_tai, wl_dun, wl_ju)
 
-# Render Text
-chuoi_cuc = f"{wl_dun}{wl_ju}局 | {wl_jieqi}{wl_yuan}元"
-bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 (日干支: {wl_can}{wl_chi})"
-hour_str = f"<b>{hoa_giap_hien_tai}</b>时"
+# --- Render Text Header Mới ---
+chuoi_cuc = f"{wl_dun}{wl_ju}局"
+bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日"
+hour_str = f"{hoa_giap_hien_tai}时"
 
-title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi} {hour_str}</h3>"
-sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>真传奇门遁甲 | {chuoi_cuc}</h4>"
+title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi} | {hour_str}</h3>"
+sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {chuoi_cuc}</h4>"
 
 qimen_board_html = render_html_table(data)
 
