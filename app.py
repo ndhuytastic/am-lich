@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="Kỳ Môn Độn Giáp Chân Truyền", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ (ĐÃ TỐI GIẢN CHỈ CÒN CỦA CHÂN TRUYỀN)
+# 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN
 # ==========================================
 thien_can = "甲乙丙丁戊己庚辛壬癸"
 dia_chi = "子丑寅卯辰巳午未申酉戌亥"
@@ -45,7 +45,7 @@ def get_xun_leader(can, chi):
     return {"子":"戊", "戌":"己", "申":"庚", "午":"辛", "辰":"壬", "寅":"癸"}[chi_tuan]
 
 def get_wolong_calendar_data(lunar_month, lunar_day):
-    """Nội suy Bảng 1 của tác giả Hojo Ikko"""
+    """Nội suy Bảng 1 Lịch Chân Truyền của tác giả Hojo Ikko"""
     m_offset = (lunar_month - 11) % 12
     abs_day = m_offset * 30 + (lunar_day - 1)
     
@@ -96,8 +96,10 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
     p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
 
     if p_circle == 5:
+        # Nếu Tướng kẹt ở Trung cung thì Thiên Bàn giữ nguyên như Địa Bàn
         for i in range(1, 10): cung_data[i]['thien'] = dia_ban[i]
     else:
+        # Xoay vòng ngoài
         idx_source = WOLONG_OUTER_PALACES.index(p_circle)
         idx_target = WOLONG_OUTER_PALACES.index(p_hour_stem) if p_hour_stem != 5 else idx_source
         offset = (idx_target - idx_source) % 8
@@ -136,7 +138,7 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
     return cung_data
 
 # ==========================================
-# 4. GIAO DIỆN HTML RENDER (GIỮ NGUYÊN CSS)
+# 4. GIAO DIỆN HTML RENDER 
 # ==========================================
 def render_html_table(cung_data):
     luoi_lac_thu = [[4, 9, 2], [3, 5, 7], [8, 1, 6]]
@@ -198,7 +200,7 @@ def get_current_vn_time():
 if "init_dt" not in st.session_state:
     st.session_state.init_dt = get_current_vn_time()
 
-# Tách riêng form nhập liệu Giờ và Phút
+# --- GIAO DIỆN NHẬP LIỆU GỌN NHẸ ---
 col1, col2, col3 = st.columns(3)
 with col1:
     selected_date = st.date_input("Ngày", st.session_state.init_dt.date())
@@ -219,10 +221,10 @@ else:
 
 chi_gio = dia_chi[chi_gio_idx]
 
-# Tính Lịch Âm
+# Tính Lịch Âm bằng hàm chuẩn của sxtwl
 day_obj = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
-lunar_m = day_obj.getLMo()
-lunar_d = day_obj.getLDi()
+lunar_m = day_obj.getLunarMonth()
+lunar_d = day_obj.getLunarDay()
 
 # Lấy dữ liệu Chân Truyền Lịch
 wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(lunar_m, lunar_d)
