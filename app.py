@@ -128,7 +128,7 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
             return 2 if mc == 5 else mc
 
 # ==========================================
-# 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
+# 3. LẬP QUẺ CHÂN TRUYỀN 
 # ==========================================
 def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     can_gio, chi_gio = hoa_giap_gio[0], hoa_giap_gio[1]
@@ -167,7 +167,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         for i in range(8):
             cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
 
-    cung_data[5]['thien'] = "" # Trung Cung rỗng
+    cung_data[5]['thien'] = "" 
 
     for i in range(1, 10):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
@@ -190,7 +190,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
             for i in range(8):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
 
-    # 3.4 CỬU CUNG GIỜ & THIÊN THỜI (Xử lý Kép 〇/✕)
+    # 3.4 CỬU CUNG GIỜ & THIÊN THỜI
     center_hour_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
     curr_star = center_hour_star
     for cung in WOLONG_FLYING_PATH:
@@ -207,19 +207,19 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         if t_can == luc_nghi_gio and d_can == luc_nghi_gio:
             m1 = THIEN_THOI_DICT["甲"]["甲"]
             m2 = THIEN_THOI_DICT[luc_nghi_gio][luc_nghi_gio]
-            cung_data[i]['thien_thoi'] = f"{m1} / {m2}"
+            cung_data[i]['thien_thoi'] = f"{m1}/{m2}"
         elif t_can == luc_nghi_gio:
             m1 = THIEN_THOI_DICT[d_can]["甲"]
             m2 = THIEN_THOI_DICT[d_can][luc_nghi_gio]
-            cung_data[i]['thien_thoi'] = f"{m1} / {m2}"
+            cung_data[i]['thien_thoi'] = f"{m1}/{m2}"
         elif d_can == luc_nghi_gio:
             m1 = THIEN_THOI_DICT["甲"][t_can]
             m2 = THIEN_THOI_DICT[luc_nghi_gio][t_can]
-            cung_data[i]['thien_thoi'] = f"{m1} / {m2}"
+            cung_data[i]['thien_thoi'] = f"{m1}/{m2}"
         else:
             cung_data[i]['thien_thoi'] = THIEN_THOI_DICT[d_can].get(t_can, "")
 
-    # 3.5 TÍNH HÀO ĐỘNG (Dựa trên chẵn/lẻ của Giờ và Phút)
+    # 3.5 TÍNH HÀO ĐỘNG 
     slot = (user_dt.minute // 20) + 1
     if user_dt.hour % 2 == 0: slot += 3
     hao_dong = slot
@@ -227,7 +227,68 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     return cung_data, p_circle, hao_dong
 
 # ==========================================
-# 4. GIAO DIỆN HTML RENDER 
+# 4. TÌM GIỜ ĐẠI CÁT
+# ==========================================
+def find_good_times(start_dt, b_year, b_lunar_y, b_lunar_m, user_birth_star):
+    results = []
+    curr_dt = start_dt
+    ops = {1:9, 9:1, 2:8, 8:2, 3:7, 7:3, 4:6, 6:4, 5:None}
+    pha_map = {"子":9, "丑":2, "寅":2, "卯":7, "辰":6, "巳":6, "午":1, "未":8, "申":8, "酉":3, "戌":4, "亥":4}
+    palace_names = {1:"Khảm (Bắc)", 8:"Cấn (ĐB)", 3:"Chấn (Đông)", 4:"Tốn (ĐN)", 9:"Ly (Nam)", 2:"Khôn (TN)", 7:"Đoài (Tây)", 6:"Càn (TB)"}
+    
+    # Quét tối đa 10 ngày tới
+    for _ in range(120):
+        if len(results) >= 8: break
+        
+        curr_dt += timedelta(hours=2)
+        if curr_dt.hour >= 23: actual_date = curr_dt.date() + timedelta(days=1); chi_gio_idx = 0 
+        else: actual_date = curr_dt.date(); chi_gio_idx = (curr_dt.hour + 1) // 2 % 12
+        curr_chi = dia_chi[chi_gio_idx]
+        
+        day_o = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
+        wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(day_o.getLunarMonth(), day_o.getLunarDay())
+        
+        curr_can = get_wushu_dun(wl_can, curr_chi)
+        curr_hoa_giap = curr_can + curr_chi
+        
+        yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
+        base_ju = solar_term_ju[wl_jieqi][yuan_idx]
+        offset = {"甲":0, "己":0, "乙":1, "庚":1, "丙":2, "辛":2, "丁":3, "壬":3, "戊":4, "癸":4}[curr_can]
+        curr_ju = (base_ju + offset - 1) % 9 + 1 if wl_dun == "阳遁" else (base_ju - offset - 1) % 9 + 1
+        if curr_ju <= 0: curr_ju += 9
+            
+        data, _, _ = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
+        
+        # Tìm Sát Khí
+        p_5 = None
+        for i in range(1, 10):
+            if data[i]['hour_star'] == 5: p_5 = i; break
+        
+        sat_list = []
+        if p_5 and p_5 != 5:
+            sat_list.extend([p_5, ops[p_5]]) # Ngũ Hoàng, Ám Kiếm
+            
+        p_bm = None
+        for i in range(1, 10):
+            if data[i]['hour_star'] == user_birth_star: p_bm = i; break
+        if p_bm and p_bm != 5:
+            sat_list.extend([p_bm, ops[p_bm]]) # Bản Mệnh, Đích Sát
+            
+        sat_list.append(pha_map[curr_chi]) # Phá
+        
+        for p in WOLONG_OUTER_PALACES:
+            if data[p]['mon'] not in ["生门", "景门", "开门"]: continue
+            if "〇" not in data[p]['thien_thoi'] or "✕" in data[p]['thien_thoi']: continue
+            if p in sat_list: continue
+            
+            time_str = f"{curr_dt.strftime('%d/%m')} ({curr_dt.hour}h) - {curr_hoa_giap}时"
+            results.append({"time": time_str, "dir": palace_names[p], "door": data[p]['mon']})
+            break # Tìm đc 1 hướng tốt trong giờ này là nhảy sang giờ tiếp theo
+            
+    return results
+
+# ==========================================
+# 5. GIAO DIỆN HTML RENDER 
 # ==========================================
 def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star):
     upper_gate = cung_data[menh_cung]['mon']
@@ -245,10 +306,9 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
     eval_res = EVAL_DICT.get(mut_upper, {}).get(mut_lower, "△")
     hex_info = HEX_NAME_DICT.get((mut_upper, mut_lower), (0, "Không rõ"))
     
-    # CSS thu nhỏ tên quẻ (font-size 11px)
     hex_html = f"""
         <div style="font-size:12px; font-weight:bold; color:#000; margin-bottom: 2px;">{hex_info[0]} {eval_res}</div>
-        <div style="font-size:32px; line-height:0.9; color:#b30000; margin-bottom: 2px;">
+        <div style="font-size:30px; line-height:0.9; color:#b30000; margin-bottom: 2px;">
             {TRIGRAM_UNICODE[mut_upper]}<br>{TRIGRAM_UNICODE[mut_lower]}
         </div>
         <div style="font-size:11px; font-weight:normal; color:#333;">{hex_info[1]}</div>
@@ -266,7 +326,7 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
         .wolong-spacing { margin-top: 15px; margin-bottom: 25px; }
         .hour-star { position: absolute; top: 4px; right: 6px; color: #777; font-size: 13px; font-weight: bold; z-index: 10;}
         .star-highlight { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 2px dashed #0000FF; border-radius: 50%; color: #0000FF; }
-        .thien-thoi-mark { position: absolute; bottom: 4px; right: 6px; color: #1a1a1a; font-size: 14px; font-weight: bold;}
+        .thien-thoi-mark { position: absolute; bottom: 4px; right: 6px; color: #1a1a1a; font-size: 13px; font-weight: bold;}
     </style>
     <table class="qmdj-table">
     """
@@ -275,7 +335,7 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
         html += "<tr>"
         for p in row:
             d = cung_data[p]
-            bg_color = "#e6e6e6" if p == menh_cung else "transparent"
+            bg_color = "#e8e8e8" if p == menh_cung else "transparent"
             
             thien_weight = "bold" if d['is_thien_bold'] else "normal"
             dia_weight = "bold" if d['is_dia_bold'] else "normal"
@@ -295,7 +355,6 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
             if p == 5:
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
-                    {hour_star_html}
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
@@ -321,22 +380,21 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
     return html
 
 # ==========================================
-# 5. STREAMLIT APP MAIN
+# 6. STREAMLIT APP MAIN
 # ==========================================
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-# --- GIAO DIỆN NHẬP LIỆU GỌN 1 DÒNG ---
-st.markdown("<p style='text-align: center; margin-bottom: 2px; font-weight:bold; color: #555;'>📅 THÔNG SỐ LUẬN ĐOÁN</p>", unsafe_allow_html=True)
-col1, col2, col3, col4, col5, col6 = st.columns([1.5, 1, 1, 1.5, 1, 1])
-with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date())
+# Giao diện gọn 1 dòng 6 ô
+col1, col2, col3, col4, col5, col6 = st.columns([1.2, 0.8, 0.8, 1.2, 0.8, 0.8])
+with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1))
 with col2: selected_hour = st.selectbox("Giờ", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút", options=list(range(60)), index=st.session_state.init_dt.minute)
 with col4: birth_date = st.date_input("Ngày Sinh", value=date(1990, 1, 1), min_value=date(1900, 1, 1))
 with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=12)
 with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=0)
 
-# ----------------- XỬ LÝ LỊCH XEM -----------------
+# XỬ LÝ LỊCH XEM 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
 chi_gio_idx = 0 if user_dt.hour >= 23 else (user_dt.hour + 1) // 2 % 12
@@ -356,7 +414,7 @@ hour_stem_offset = {"甲":0, "己":0, "乙":1, "庚":1, "丙":2, "辛":2, "丁":
 wl_ju = (base_ju + hour_stem_offset - 1) % 9 + 1 if wl_dun == "阳遁" else (base_ju - hour_stem_offset - 1) % 9 + 1
 if wl_ju <= 0: wl_ju += 9
 
-# ----------------- XỬ LÝ LỊCH SINH & MỆNH CUNG -----------------
+# XỬ LÝ LỊCH SINH
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
 b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
 b_chi_idx = 0 if b_dt.hour >= 23 else (b_dt.hour + 1) // 2 % 12
@@ -366,26 +424,30 @@ b_day_obj = sxtwl.fromSolar(b_actual_date.year, b_actual_date.month, b_actual_da
 b_lunar_m = b_day_obj.getLunarMonth()
 b_lunar_d = b_day_obj.getLunarDay()
 
-b_wl_can, b_wl_chi, b_wl_jieqi, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_lunar_d)
+b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_lunar_d)
 user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
-
 menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_day_obj.getLunarMonth())
 
-# ----------------- RENDER BÀN -----------------
+# RENDER GIAO DIỆN
 data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_dun, wl_ju, user_dt)
 
-title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>农历 {lunar_m}月 {lunar_d}日 | {hoa_giap_hien_tai}时</h3>"
-sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {wl_dun}{wl_ju}局</h4>"
+col_board, col_result = st.columns([1.5, 1])
 
-qimen_board_html = render_html_table(data, menh_cung, p_circle, hao_dong, user_birth_star)
+with col_board:
+    bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {hoa_giap_hien_tai}时"
+    st.markdown(f"<h3 style='margin-bottom:5px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='margin-top:0px; margin-bottom:10px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {wl_dun}{wl_ju}局</h4>", unsafe_allow_html=True)
+    st.components.v1.html(render_html_table(data, menh_cung, p_circle, hao_dong, user_birth_star), height=400, scrolling=False)
 
-combined_html = f"""
-    <div style="display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 10px;">
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px;">
-            {title}
-            {sub_title}
-            {qimen_board_html}
-        </div>
-    </div>
-"""
-st.components.v1.html(combined_html, height=550, scrolling=True)
+with col_result:
+    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
+    if st.button("🔍 Tìm 8 Mốc Giờ Đại Cát Tương Lai", use_container_width=True):
+        with st.spinner("Đang nội suy quỹ đạo Cửu Cung..."):
+            good_times = find_good_times(user_dt, b_actual_date.year, b_day_obj.getLunarYear(), b_day_obj.getLunarMonth(), user_birth_star)
+        
+        if good_times:
+            st.success("Đã tìm thấy các mốc giờ hội tụ đủ Thiên Thời, Địa Lợi, Nhân Hòa:")
+            for idx, res in enumerate(good_times):
+                st.markdown(f"**{idx+1}. {res['time']}** 👉 Hướng **{res['dir']}** ({res['door']})")
+        else:
+            st.warning("Trong 10 ngày tới không có khung giờ nào đạt chuẩn Đại Cát cho bản mệnh của bạn.")
