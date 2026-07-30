@@ -43,7 +43,6 @@ TRIGRAM_BIN = {"地": [0,0,0], "山": [0,0,1], "水": [0,1,0], "风": [0,1,1], "
 BIN_TO_TRIGRAM = {tuple(v): k for k, v in TRIGRAM_BIN.items()}
 TRIGRAM_UNICODE = {"天": "☰", "泽": "☱", "火": "☲", "雷": "☳", "风": "☴", "水": "☵", "山": "☶", "地": "☷"}
 
-# Ma trận 64 Quẻ Địa Lợi: EVAL_DICT[Thượng Quái][Hạ Quái] -> Kết quả
 EVAL_DICT = {
     "风": {"风":"〇", "火":"△", "地":"✕", "雷":"〇", "泽":"△", "山":"〇", "水":"✕", "天":"〇"},
     "天": {"风":"✕", "火":"△", "地":"✕", "雷":"〇", "泽":"✕", "山":"△", "水":"✕", "天":"✕"},
@@ -58,21 +57,20 @@ EVAL_DICT = {
 HEX_NAME_DICT = {
     ("天","天"): (1,"Bát Thuần Càn"), ("地","地"): (2,"Bát Thuần Khôn"), ("水","雷"): (3,"Thủy Lôi Truân"), ("山","水"): (4,"Sơn Thủy Mông"),
     ("水","天"): (5,"Thủy Thiên Nhu"), ("天","水"): (6,"Thiên Thủy Tụng"), ("地","水"): (7,"Địa Thủy Sư"), ("水","地"): (8,"Thủy Địa Tỷ"),
-    ("风","天"): (9,"Phong Thiên Tiểu Súc"), ("天","泽"): (10,"Thiên Trạch Lý"), ("地","天"): (11,"Địa Thiên Thái"), ("天","地"): (12,"Thiên Địa Bĩ"),
-    ("天","火"): (13,"Thiên Hỏa Đồng Nhân"), ("火","天"): (14,"Hỏa Thiên Đại Hữu"), ("地","山"): (15,"Địa Sơn Khiêm"), ("雷","地"): (16,"Lôi Địa Dự"),
+    ("风","天"): (9,"Phong Thiên T.Súc"), ("天","泽"): (10,"Thiên Trạch Lý"), ("地","天"): (11,"Địa Thiên Thái"), ("天","地"): (12,"Thiên Địa Bĩ"),
+    ("天","火"): (13,"T.Hỏa Đồng Nhân"), ("火","天"): (14,"Hỏa Thiên Đ.Hữu"), ("地","山"): (15,"Địa Sơn Khiêm"), ("雷","地"): (16,"Lôi Địa Dự"),
     ("泽","雷"): (17,"Trạch Lôi Tùy"), ("山","风"): (18,"Sơn Phong Cổ"), ("地","泽"): (19,"Địa Trạch Lâm"), ("风","地"): (20,"Phong Địa Quan"),
     ("火","雷"): (21,"Hỏa Lôi Phệ Hạp"), ("山","火"): (22,"Sơn Hỏa Bí"), ("山","地"): (23,"Sơn Địa Bác"), ("地","雷"): (24,"Địa Lôi Phục"),
-    ("天","雷"): (25,"Thiên Lôi Vô Vọng"), ("山","天"): (26,"Sơn Thiên Đại Súc"), ("山","雷"): (27,"Sơn Lôi Di"), ("泽","风"): (28,"Trạch Phong Đại Quá"),
+    ("天","雷"): (25,"T.Lôi Vô Vọng"), ("山","天"): (26,"Sơn Thiên Đ.Súc"), ("山","雷"): (27,"Sơn Lôi Di"), ("泽","风"): (28,"Trạch Phong Đ.Quá"),
     ("水","水"): (29,"Bát Thuần Khảm"), ("火","火"): (30,"Bát Thuần Ly"), ("泽","山"): (31,"Trạch Sơn Hàm"), ("雷","风"): (32,"Lôi Phong Hằng"),
-    ("天","山"): (33,"Thiên Sơn Độn"), ("雷","天"): (34,"Lôi Thiên Đại Tráng"), ("火","地"): (35,"Hỏa Địa Tấn"), ("地","火"): (36,"Địa Hỏa Minh Di"),
-    ("风","火"): (37,"Phong Hỏa Gia Nhân"), ("火","泽"): (38,"Hỏa Trạch Khuê"), ("水","山"): (39,"Thủy Sơn Kiển"), ("雷","水"): (40,"Lôi Thủy Giải"),
+    ("天","山"): (33,"Thiên Sơn Độn"), ("雷","天"): (34,"Lôi Thiên Đ.Tráng"), ("火","地"): (35,"Hỏa Địa Tấn"), ("地","火"): (36,"Địa Hỏa Minh Di"),
+    ("风","火"): (37,"Phong Hỏa G.Nhân"), ("火","泽"): (38,"Hỏa Trạch Khuê"), ("水","山"): (39,"Thủy Sơn Kiển"), ("雷","水"): (40,"Lôi Thủy Giải"),
     ("山","泽"): (41,"Sơn Trạch Tổn"), ("风","雷"): (42,"Phong Lôi Ích"), ("泽","天"): (43,"Trạch Thiên Quải"), ("天","风"): (44,"Thiên Phong Cấu"),
     ("泽","地"): (45,"Trạch Địa Tụy"), ("地","风"): (46,"Địa Phong Thăng"), ("泽","水"): (47,"Trạch Thủy Khốn"), ("水","风"): (48,"Thủy Phong Tỉnh"),
     ("泽","火"): (49,"Trạch Hỏa Cách"), ("火","风"): (50,"Hỏa Phong Đỉnh"), ("雷","雷"): (51,"Bát Thuần Chấn"), ("山","山"): (52,"Bát Thuần Cấn"),
-    ("风","山"): (53,"Phong Sơn Tiệm"), ("雷","泽"): (54,"Lôi Trạch Quy Muội"), ("雷","火"): (55,"Lôi Hỏa Phong"), ("火","山"): (56,"Hỏa Sơn Lữ"),
-    ("巽","风"): (57,"Bát Thuần Tốn"), ("风","风"): (57,"Bát Thuần Tốn"), ("兑","泽"): (58,"Bát Thuần Đoài"), ("泽","泽"): (58,"Bát Thuần Đoài"),
-    ("风","水"): (59,"Phong Thủy Hoán"), ("水","泽"): (60,"Thủy Trạch Tiết"), ("风","泽"): (61,"Phong Trạch Trung Phu"), ("雷","山"): (62,"Lôi Sơn Tiểu Quá"),
-    ("水","火"): (63,"Thủy Hỏa Ký Tế"), ("火","水"): (64,"Hỏa Thủy Vị Tế")
+    ("风","山"): (53,"Phong Sơn Tiệm"), ("雷","泽"): (54,"Lôi Trạch Q.Muội"), ("雷","火"): (55,"Lôi Hỏa Phong"), ("火","山"): (56,"Hỏa Sơn Lữ"),
+    ("风","风"): (57,"Bát Thuần Tốn"), ("泽","泽"): (58,"Bát Thuần Đoài"), ("风","水"): (59,"Phong Thủy Hoán"), ("水","泽"): (60,"Thủy Trạch Tiết"),
+    ("风","泽"): (61,"P.Trạch T.Phu"), ("雷","山"): (62,"Lôi Sơn Tiểu Quá"), ("水","火"): (63,"Thủy Hỏa Ký Tế"), ("火","水"): (64,"Hỏa Thủy Vị Tế")
 }
 
 # ==========================================
@@ -103,14 +101,12 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
     elif day_branch in ["辰", "戌", "丑", "未"]: start_star = 4 if dun_type == "阳遁" else 7
     else: start_star = 7 if dun_type == "阳遁" else 4
 
-    if dun_type == "阳遁":
-        return (start_star + hb_idx - 1) % 9 + 1
+    if dun_type == "阳遁": return (start_star + hb_idx - 1) % 9 + 1
     else:
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
 
 def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
-    """Tính Bản Mệnh Cung (Dựa trên Nguyệt Tinh lùi)"""
     y_sum = sum(int(d) for d in str(b_lunar_y))
     star_y = 11 - (y_sum % 9 or 9)
     if star_y <= 0: star_y += 9
@@ -129,7 +125,7 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
         if val == 0: val = 9
         if val == star_m:
             mc = yin_path[i]
-            return 2 if mc == 5 else mc # Ký cung 5 về 2 Khôn
+            return 2 if mc == 5 else mc
 
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
@@ -171,7 +167,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         for i in range(8):
             cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
 
-    cung_data[5]['thien'] = "" # Luật: Trung Cung rỗng Thiên bàn
+    cung_data[5]['thien'] = "" # Trung Cung rỗng
 
     for i in range(1, 10):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
@@ -194,7 +190,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
             for i in range(8):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
 
-    # 3.4 TÍNH CỬU CUNG GIỜ & THIÊN THỜI
+    # 3.4 CỬU CUNG GIỜ & THIÊN THỜI (Xử lý Kép 〇/✕)
     center_hour_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
     curr_star = center_hour_star
     for cung in WOLONG_FLYING_PATH:
@@ -208,7 +204,6 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         d_can = cung_data[i]['dia']
         if not t_can or not d_can: continue
         
-        # Sửa lỗi Thiên Thời: Xử lý kép
         if t_can == luc_nghi_gio and d_can == luc_nghi_gio:
             m1 = THIEN_THOI_DICT["甲"]["甲"]
             m2 = THIEN_THOI_DICT[luc_nghi_gio][luc_nghi_gio]
@@ -224,7 +219,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         else:
             cung_data[i]['thien_thoi'] = THIEN_THOI_DICT[d_can].get(t_can, "")
 
-    # 3.5 TÍNH HÀO ĐỘNG
+    # 3.5 TÍNH HÀO ĐỘNG (Dựa trên chẵn/lẻ của Giờ và Phút)
     slot = (user_dt.minute // 20) + 1
     if user_dt.hour % 2 == 0: slot += 3
     hao_dong = slot
@@ -234,11 +229,9 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
 # ==========================================
 # 4. GIAO DIỆN HTML RENDER 
 # ==========================================
-def render_html_table(cung_data, menh_cung, p_circle, hao_dong):
-    # TRÍCH XUẤT QUẺ DỊCH
+def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star):
     upper_gate = cung_data[menh_cung]['mon']
     lower_gate = cung_data[p_circle]['mon']
-    
     upper_tri = GATE_TO_TRIGRAM.get(upper_gate, "天")
     lower_tri = GATE_TO_TRIGRAM.get(lower_gate, "地")
     
@@ -252,16 +245,16 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong):
     eval_res = EVAL_DICT.get(mut_upper, {}).get(mut_lower, "△")
     hex_info = HEX_NAME_DICT.get((mut_upper, mut_lower), (0, "Không rõ"))
     
+    # CSS thu nhỏ tên quẻ (font-size 11px)
     hex_html = f"""
-        <div style="font-size:14px; font-weight:bold; color:#000; margin-bottom: 2px;">{hex_info[0]} {eval_res}</div>
-        <div style="font-size:32px; line-height:0.9; color:#b30000;">
+        <div style="font-size:12px; font-weight:bold; color:#000; margin-bottom: 2px;">{hex_info[0]} {eval_res}</div>
+        <div style="font-size:32px; line-height:0.9; color:#b30000; margin-bottom: 2px;">
             {TRIGRAM_UNICODE[mut_upper]}<br>{TRIGRAM_UNICODE[mut_lower]}
         </div>
-        <div style="font-size:13px; font-weight:normal; color:#333; margin-top: 4px;">{hex_info[1]}</div>
+        <div style="font-size:11px; font-weight:normal; color:#333;">{hex_info[1]}</div>
     """
 
     luoi_lac_thu = [[4, 9, 2], [3, 5, 7], [8, 1, 6]]
-    
     html = """
     <style>
         .qmdj-table { border-collapse: collapse; width: 100%; max-width: 480px; min-width: 320px; height: 360px; table-layout: fixed; font-size: 15px; background-color: #fefefe; margin: 0 auto; border: 1px solid #bfbfbf; }
@@ -271,7 +264,8 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong):
         .item-right { display: flex; align-items: center; flex-wrap: wrap; flex-grow: 1; gap: 2px 3px; line-height: 1.2; margin-left: 10px; color: #b30000; font-size: 18px; }
         .wolong-stem { display: inline-block; padding: 2px 4px; }
         .wolong-spacing { margin-top: 15px; margin-bottom: 25px; }
-        .hour-star { position: absolute; top: 4px; right: 6px; color: #000; font-size: 14px; font-weight: bold;}
+        .hour-star { position: absolute; top: 4px; right: 6px; color: #777; font-size: 13px; font-weight: bold; z-index: 10;}
+        .star-highlight { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 2px dashed #0000FF; border-radius: 50%; color: #0000FF; }
         .thien-thoi-mark { position: absolute; bottom: 4px; right: 6px; color: #1a1a1a; font-size: 14px; font-weight: bold;}
     </style>
     <table class="qmdj-table">
@@ -281,19 +275,27 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong):
         html += "<tr>"
         for p in row:
             d = cung_data[p]
-            bg_color = "#e8e8e8" if p == menh_cung else "transparent"
+            bg_color = "#e6e6e6" if p == menh_cung else "transparent"
             
             thien_weight = "bold" if d['is_thien_bold'] else "normal"
             dia_weight = "bold" if d['is_dia_bold'] else "normal"
             thien_html = f"<span style='font-weight: {thien_weight};'>{d['thien']}</span>"
             dia_html = f"<span style='font-weight: {dia_weight};'>{d['dia']}</span>"
             
-            hour_star_html = f"<div class='hour-star'>{d['hour_star']}</div>"
+            # Highlight Cửu Cung Giờ Sinh
+            is_match = (d['hour_star'] == user_birth_star)
+            h_star_val = d['hour_star']
+            if is_match:
+                hour_star_html = f"<div class='hour-star'><span class='star-highlight'>{h_star_val}</span></div>"
+            else:
+                hour_star_html = f"<div class='hour-star'>{h_star_val}</div>"
+                
             thien_thoi_html = f"<div class='thien-thoi-mark'>{d['thien_thoi']}</div>" if p != 5 else ""
 
             if p == 5:
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
+                    {hour_star_html}
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
@@ -325,8 +327,9 @@ def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
 # --- GIAO DIỆN NHẬP LIỆU GỌN 1 DÒNG ---
+st.markdown("<p style='text-align: center; margin-bottom: 2px; font-weight:bold; color: #555;'>📅 THÔNG SỐ LUẬN ĐOÁN</p>", unsafe_allow_html=True)
 col1, col2, col3, col4, col5, col6 = st.columns([1.5, 1, 1, 1.5, 1, 1])
-with col1: selected_date = st.date_input("Ngày", value=st.session_state.init_dt.date())
+with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date())
 with col2: selected_hour = st.selectbox("Giờ", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút", options=list(range(60)), index=st.session_state.init_dt.minute)
 with col4: birth_date = st.date_input("Ngày Sinh", value=date(1990, 1, 1), min_value=date(1900, 1, 1))
@@ -356,7 +359,15 @@ if wl_ju <= 0: wl_ju += 9
 # ----------------- XỬ LÝ LỊCH SINH & MỆNH CUNG -----------------
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
 b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
+b_chi_idx = 0 if b_dt.hour >= 23 else (b_dt.hour + 1) // 2 % 12
+b_chi_gio = dia_chi[b_chi_idx]
+
 b_day_obj = sxtwl.fromSolar(b_actual_date.year, b_actual_date.month, b_actual_date.day)
+b_lunar_m = b_day_obj.getLunarMonth()
+b_lunar_d = b_day_obj.getLunarDay()
+
+b_wl_can, b_wl_chi, b_wl_jieqi, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_lunar_d)
+user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
 
 menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_day_obj.getLunarMonth())
 
@@ -366,7 +377,7 @@ data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_
 title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>农历 {lunar_m}月 {lunar_d}日 | {hoa_giap_hien_tai}时</h3>"
 sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {wl_dun}{wl_ju}局</h4>"
 
-qimen_board_html = render_html_table(data, menh_cung, p_circle, hao_dong)
+qimen_board_html = render_html_table(data, menh_cung, p_circle, hao_dong, user_birth_star)
 
 combined_html = f"""
     <div style="display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 10px;">
