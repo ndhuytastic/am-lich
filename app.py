@@ -73,6 +73,8 @@ HEX_NAME_DICT = {
     ("风","泽"): (61,"P.Trạch T.Phu"), ("雷","山"): (62,"Lôi Sơn Tiểu Quá"), ("水","火"): (63,"Thủy Hỏa Ký Tế"), ("火","水"): (64,"Hỏa Thủy Vị Tế")
 }
 
+cung_to_gua = {1: "坎", 2: "坤", 3: "震", 4: "巽", 5: "", 6: "乾", 7: "兑", 8: "艮", 9: "离"}
+
 # ==========================================
 # 2. LOGIC TÍNH LỊCH & MỆNH CUNG
 # ==========================================
@@ -138,6 +140,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         'hour_star': '', 'thien_thoi': ''
     } for i in range(1, 10)}
     
+    # 3.1 DỰNG ĐỊA BÀN
     current_val = (10 - ju_num) if dun_type == "阳遁" else ju_num
     step_dir = 1 if dun_type == "阳遁" else -1
 
@@ -155,6 +158,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
     p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
 
+    # 3.2 DỰNG THIÊN BÀN
     if p_circle == 5:
         for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i]
         if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio
@@ -171,6 +175,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
         if cung_data[i]['dia'] == luc_nghi_gio: cung_data[i]['is_dia_bold'] = True
 
+    # 3.3 AN BÁT MÔN
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
@@ -187,6 +192,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
             for i in range(8):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
 
+    # 3.4 CỬU CUNG GIỜ & THIÊN THỜI
     center_hour_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
     curr_star = center_hour_star
     for cung in WOLONG_FLYING_PATH:
@@ -215,6 +221,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         else:
             cung_data[i]['thien_thoi'] = THIEN_THOI_DICT[d_can].get(t_can, "")
 
+    # 3.5 TÍNH HÀO ĐỘNG 
     slot = (user_dt.minute // 20) + 1
     if user_dt.hour % 2 == 0: slot += 3
     hao_dong = slot
@@ -241,7 +248,6 @@ def evaluate_hexagram(cung_data, menh_cung, p_circle, hao_dong):
 
 def find_good_times(start_dt, menh_cung, user_birth_star):
     found_dirs = {}
-    
     minute_rounded = (start_dt.minute // 20) * 20
     curr_dt = start_dt.replace(minute=minute_rounded, second=0, microsecond=0)
     
@@ -405,10 +411,10 @@ if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_
 
 # --- GIAO DIỆN NHẬP LIỆU GỌN 1 DÒNG ---
 col1, col2, col3, col4, col5, col6 = st.columns([1.2, 0.8, 0.8, 1.2, 0.8, 0.8])
-with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1))
+with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút", options=list(range(60)), index=st.session_state.init_dt.minute)
-with col4: birth_date = st.date_input("Ngày Sinh", value=date(1969, 3, 19), min_value=date(1900, 1, 1))
+with col4: birth_date = st.date_input("Ngày Sinh", value=date(1969, 3, 19), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=12)
 with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=0)
 
@@ -464,11 +470,11 @@ combined_html = f"""
         </div>
     </div>
 """
-st.components.v1.html(combined_html, height=450, scrolling=False)
+st.components.v1.html(combined_html, height=520, scrolling=False)
 
 # NÚT TÌM GIỜ ĐẠI CÁT BÊN DƯỚI BẢNG
 st.markdown("<div style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
-if st.button("🔍 Giờ Đại Cát (Cho 8 Hướng)", use_container_width=True):
+if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất", use_container_width=True):
     with st.spinner("Đang quét các mốc 20 phút tương lai..."):
         found_dirs = find_good_times(user_dt, menh_cung, user_birth_star)
     
@@ -480,7 +486,7 @@ if st.button("🔍 Giờ Đại Cát (Cho 8 Hướng)", use_container_width=True
                 st.markdown(f"🧭 Hướng **{res['dir']}** 👉 {res['time']} (Cửa: {res['door']})")
             else:
                 palace_names = {1:"Bắc", 8:"Đông Bắc", 3:"Đông", 4:"Đông Nam", 9:"Nam", 2:"Tây Nam", 7:"Tây", 6:"Tây Bắc"}
-                st.markdown(f"🧭 Hướng **{palace_names[p]}** 👉 Không có trong 20 ngày tới")
+                st.markdown(f"🧭 Hướng **{palace_names[p]}** 👉 Không tìm thấy thời điểm đại cát trong 20 ngày tới.")
     else:
-        st.warning("Không có trong 20 ngày tới")
+        st.warning("Trong 20 ngày tới không có khung giờ nào đạt chuẩn Đại Cát.")
 st.markdown("</div>", unsafe_allow_html=True)
