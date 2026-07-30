@@ -73,8 +73,6 @@ HEX_NAME_DICT = {
     ("风","泽"): (61,"P.Trạch T.Phu"), ("雷","山"): (62,"Lôi Sơn Tiểu Quá"), ("水","火"): (63,"Thủy Hỏa Ký Tế"), ("火","水"): (64,"Hỏa Thủy Vị Tế")
 }
 
-cung_to_gua = {1: "坎", 2: "坤", 3: "震", 4: "巽", 5: "", 6: "乾", 7: "兑", 8: "艮", 9: "离"}
-
 # ==========================================
 # 2. LOGIC TÍNH LỊCH & MỆNH CUNG
 # ==========================================
@@ -132,7 +130,7 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
 # ==========================================
-def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, dt_obj):
+def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     can_gio, chi_gio = hoa_giap_gio[0], hoa_giap_gio[1]
     
     cung_data = {i: {
@@ -217,8 +215,8 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, dt_obj):
         else:
             cung_data[i]['thien_thoi'] = THIEN_THOI_DICT[d_can].get(t_can, "")
 
-    slot = (dt_obj.minute // 20) + 1
-    if dt_obj.hour % 2 == 0: slot += 3
+    slot = (user_dt.minute // 20) + 1
+    if user_dt.hour % 2 == 0: slot += 3
     hao_dong = slot
 
     return cung_data, p_circle, hao_dong
@@ -242,9 +240,8 @@ def evaluate_hexagram(cung_data, menh_cung, p_circle, hao_dong):
     return EVAL_DICT.get(mut_upper, {}).get(mut_lower, "✕")
 
 def find_good_times(start_dt, menh_cung, user_birth_star):
-    results = []
+    found_dirs = {}
     
-    # Làm tròn phút xuống mốc 20 phút gần nhất để chạy loop
     minute_rounded = (start_dt.minute // 20) * 20
     curr_dt = start_dt.replace(minute=minute_rounded, second=0, microsecond=0)
     
@@ -252,8 +249,8 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
     pha_map = {"子":9, "丑":2, "寅":2, "卯":7, "辰":6, "巳":6, "午":1, "未":8, "申":8, "酉":3, "戌":4, "亥":4}
     palace_names = {1:"Bắc", 8:"Đông Bắc", 3:"Đông", 4:"Đông Nam", 9:"Nam", 2:"Tây Nam", 7:"Tây", 6:"Tây Bắc"}
     
-    for _ in range(1500): # Quét tới 20 ngày
-        if len(results) >= 8: break
+    for _ in range(2160): # Quét 30 ngày (20 phút / lần)
+        if len(found_dirs) == 8: break
         
         curr_dt += timedelta(minutes=20)
         
@@ -279,7 +276,7 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
         if evaluate_hexagram(data, menh_cung, p_circle, hao_dong) != "〇":
             continue
         
-        # Tìm Sát Khí
+        # 2. Xác định các cung dính Sát Khí
         p_5 = None
         for i in range(1, 10):
             if data[i]['hour_star'] == 5: p_5 = i; break
@@ -294,17 +291,23 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
             
         sat_list.append(pha_map[curr_chi]) # Phá
         
+        # 3. Quét các hướng chưa có kết quả
         for p in WOLONG_OUTER_PALACES:
+            if p in found_dirs: continue
             if data[p]['mon'] not in ["生门", "景门", "开门"]: continue
             if "〇" not in data[p]['thien_thoi'] or "✕" in data[p]['thien_thoi']: continue
             if p in sat_list: continue
             
             end_dt = curr_dt + timedelta(minutes=19, seconds=59)
             time_str = f"{curr_dt.strftime('%d/%m')} ({curr_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')})"
-            results.append({"time": time_str, "dir": palace_names[p], "door": data[p]['mon']})
-            break # Tìm đc 1 hướng là qua slot 20 phút tiếp theo
             
-    return results
+            found_dirs[p] = {
+                "dir": palace_names[p],
+                "time": time_str,
+                "door": data[p]['mon']
+            }
+            
+    return found_dirs
 
 # ==========================================
 # 5. GIAO DIỆN HTML RENDER 
@@ -400,11 +403,12 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-col1, col2, col3, col4, col5, col6 = st.columns([1.5, 1, 1, 1.5, 1, 1])
+# --- GIAO DIỆN NHẬP LIỆU GỌN 1 DÒNG ---
+col1, col2, col3, col4, col5, col6 = st.columns([1.2, 0.8, 0.8, 1.2, 0.8, 0.8])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1))
-with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
-with col3: selected_minute = st.selectbox("Phút Xem", options=list(range(60)), index=st.session_state.init_dt.minute)
-with col4: birth_date = st.date_input("Ngày Sinh", value=date(1990, 1, 1), min_value=date(1900, 1, 1))
+with col2: selected_hour = st.selectbox("Giờ", options=list(range(24)), index=st.session_state.init_dt.hour)
+with col3: selected_minute = st.selectbox("Phút", options=list(range(60)), index=st.session_state.init_dt.minute)
+with col4: birth_date = st.date_input("Ngày Sinh", value=date(1969, 3, 19), min_value=date(1900, 1, 1))
 with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=12)
 with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=0)
 
@@ -464,14 +468,19 @@ st.components.v1.html(combined_html, height=450, scrolling=False)
 
 # NÚT TÌM GIỜ ĐẠI CÁT BÊN DƯỚI BẢNG
 st.markdown("<div style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
-if st.button("🔍 Giờ Đại Cát (Chân Truyền)", use_container_width=True):
+if st.button("🔍 Giờ Đại Cát (Cho 8 Hướng)", use_container_width=True):
     with st.spinner("Đang quét các mốc 20 phút tương lai..."):
-        good_times = find_good_times(user_dt, menh_cung, user_birth_star)
+        found_dirs = find_good_times(user_dt, menh_cung, user_birth_star)
     
-    if good_times:
-        st.success("Giờ hội tụ Thiên Thời, Địa Lợi, Nhân Hòa & Lục Hào Cát")
-        for idx, res in enumerate(good_times):
-            st.markdown(f"**{idx+1}. {res['time']}** 👉 Hướng **{res['dir']}** ({res['door']})")
+    if found_dirs:
+        st.success("Giờ Đại Cát")
+        for p in [1, 8, 3, 4, 9, 2, 7, 6]:
+            if p in found_dirs:
+                res = found_dirs[p]
+                st.markdown(f"🧭 Hướng **{res['dir']}** 👉 {res['time']} (Cửa: {res['door']})")
+            else:
+                palace_names = {1:"Bắc", 8:"Đông Bắc", 3:"Đông", 4:"Đông Nam", 9:"Nam", 2:"Tây Nam", 7:"Tây", 6:"Tây Bắc"}
+                st.markdown(f"🧭 Hướng **{palace_names[p]}** 👉 Không có trong 20 ngày tới")
     else:
-        st.warning("Trong 20 ngày tới không có khung giờ nào đạt chuẩn Đại Cát.")
+        st.warning("Không có trong 20 ngày tới")
 st.markdown("</div>", unsafe_allow_html=True)
