@@ -158,7 +158,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
     p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
 
-    # 3.2 DỰNG THIÊN BÀN (FIXED)
+    # 3.2 DỰNG THIÊN BÀN (Lưu giữ nguyên thuật toán ĐÚNG của bạn)
     if p_circle == 5:
         for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i]
         if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio
@@ -175,7 +175,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
         if cung_data[i]['dia'] == luc_nghi_gio: cung_data[i]['is_dia_bold'] = True
 
-    # 3.3 AN BÁT MÔN
+    # 3.3 AN BÁT MÔN (Lưu giữ nguyên thuật toán ĐÚNG của bạn)
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
@@ -264,15 +264,21 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
         day_o = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
         wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(day_o.getLunarMonth(), day_o.getLunarDay())
         
-        curr_can = get_wushu_dun(wl_can, curr_chi) # Đã FIX: Dùng Can Âm Lịch (wl_can)
+        curr_can = get_wushu_dun(wl_can, curr_chi)
         curr_hoa_giap = curr_can + curr_chi
         
         yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
         base_ju = solar_term_ju[wl_jieqi][yuan_idx]
-        offset = {"甲":0, "己":0, "乙":1, "庚":1, "丙":2, "辛":2, "丁":3, "壬":3, "戊":4, "癸":4}[curr_can]
         
-        curr_ju = (base_ju + offset - 1) % 9 + 1 if wl_dun == "阳遁" else (base_ju - offset - 1) % 9 + 1
+        # [ĐÃ FIX 1]: Toán học tính Cục Số (Ju) theo Bảng 4 của sách (Nhân 3)
+        hour_stem_index = thien_can.index(curr_can)
+        if wl_dun == "阳遁":
+            curr_ju = (base_ju + (hour_stem_index * 3)) % 9
+        else:
+            curr_ju = (base_ju - (hour_stem_index * 3)) % 9
+            
         if curr_ju <= 0: curr_ju += 9
+        # ==========================================
             
         data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
         
@@ -423,9 +429,16 @@ hoa_giap_hien_tai = can_gio + chi_gio
     
 yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
 base_ju = solar_term_ju[wl_jieqi][yuan_idx]
-hour_stem_offset = {"甲":0, "己":0, "乙":1, "庚":1, "丙":2, "辛":2, "丁":3, "壬":3, "戊":4, "癸":4}[can_gio]
-wl_ju = (base_ju + hour_stem_offset - 1) % 9 + 1 if wl_dun == "阳遁" else (base_ju - hour_stem_offset - 1) % 9 + 1
+
+# [ĐÃ FIX 2]: Toán học tính Cục Số (Ju) theo Bảng 4 của sách (Nhân 3)
+hour_stem_index = thien_can.index(can_gio)
+if wl_dun == "阳遁":
+    wl_ju = (base_ju + (hour_stem_index * 3)) % 9
+else:
+    wl_ju = (base_ju - (hour_stem_index * 3)) % 9
+    
 if wl_ju <= 0: wl_ju += 9
+# ==========================================
 
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
 b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
@@ -464,7 +477,7 @@ if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất (Cho 8 Hướng)
         found_dirs = find_good_times(user_dt, menh_cung, user_birth_star)
     
     if found_dirs:
-        st.success("Đã tìm thấy thời điểm Đại Cát gần nhất (Thiên-Địa-Nhân-Quẻ đều Cát) cho các hướng:")
+        st.success("Thời điểm Đại Cát gần nhất")
         for p in [1, 8, 3, 4, 9, 2, 7, 6]:
             if p in found_dirs:
                 res = found_dirs[p]
