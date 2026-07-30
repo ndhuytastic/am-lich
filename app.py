@@ -464,12 +464,12 @@ st.components.v1.html(combined_html, height=450, scrolling=False)
 
 # NÚT TÌM GIỜ ĐẠI CÁT BÊN DƯỚI BẢNG
 st.markdown("<div style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
-if st.button("🔍 Tìm 8 Mốc Giờ Đại Cát (Chân Truyền)", use_container_width=True):
+if st.button("🔍 Giờ Đại Cát (Chân Truyền)", use_container_width=True):
     with st.spinner("Đang quét các mốc 20 phút tương lai..."):
         good_times = find_good_times(user_dt, menh_cung, user_birth_star)
     
     if good_times:
-        st.success("Đã tìm thấy các mốc giờ hội tụ Thiên Thời, Địa Lợi, Nhân Hòa & Lục Hào Cát:")
+        st.success("Giờ hội tụ Thiên Thời, Địa Lợi, Nhân Hòa & Lục Hào Cát")
         for idx, res in enumerate(good_times):
             st.markdown(f"**{idx+1}. {res['time']}** 👉 Hướng **{res['dir']}** ({res['door']})")
     else:
