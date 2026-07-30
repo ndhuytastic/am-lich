@@ -90,18 +90,20 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
     p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
     p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
 
-    # --- BƯỚC 4: DỰNG THIÊN BÀN (ĐÃ FIX THEO SÁCH) ---
+# --- BƯỚC 4: DỰNG THIÊN BÀN (ĐÃ FIX LỖI TRUNG CUNG) ---
+    p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
+    p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
+
     if p_circle == 5:
-        # Giáp ở Trung Cung: Các can khác giữ nguyên (Thiên = Địa)
-        for i in range(1, 10): 
+        # Nếu Tướng kẹt ở Trung cung: 8 cung ngoài giữ nguyên như Địa Bàn
+        for i in WOLONG_OUTER_PALACES: 
             cung_data[i]['thien'] = dia_ban[i]
-        
-        # Riêng Giáp (Tướng) bay ra đè lên Can Giờ
+            
+        # Tướng bay ra đè lên Can Giờ
         if p_hour_stem != 5:
             cung_data[p_hour_stem]['thien'] = luc_nghi_gio
-            cung_data[5]['thien'] = "" # Trung cung trống vì Tướng đã đi
     else:
-        # Xoay vòng ngoài bình thường
+        # Xoay vòng 8 cung ngoài
         idx_source = WOLONG_OUTER_PALACES.index(p_circle)
         idx_target = WOLONG_OUTER_PALACES.index(p_hour_stem) if p_hour_stem != 5 else idx_source
         offset = (idx_target - idx_source) % 8
@@ -110,9 +112,11 @@ def lap_que_wolong(can_ngay, hoa_giap_gio, dun_type, ju_num):
             cung_hien_tai = WOLONG_OUTER_PALACES[i]
             cung_nguon = WOLONG_OUTER_PALACES[(i - offset) % 8]
             cung_data[cung_hien_tai]['thien'] = dia_ban[cung_nguon]
-        cung_data[5]['thien'] = dia_ban[5]
 
-    # Bật cờ in đậm cho Tuần Thủ (Giáp)
+    # LUẬT CHÂN TRUYỀN: TRUNG CUNG LUÔN LUÔN TRỐNG THIÊN BÀN
+    cung_data[5]['thien'] = ""
+
+    # Bật cờ (flag) in đậm cho Thiên/Địa Can thay vì dùng ◯
     cung_data[p_hour_stem]['is_thien_bold'] = True
     cung_data[p_circle]['is_dia_bold'] = True
 
