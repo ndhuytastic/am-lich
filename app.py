@@ -79,9 +79,8 @@ cung_to_gua = {1: "坎", 2: "坤", 3: "震", 4: "巽", 5: "", 6: "乾", 7: "兑"
 # 2. LOGIC TÍNH LỊCH & MỆNH CUNG & CỤC SỐ
 # ==========================================
 
-# ---> THÊM HÀM TÍNH CỤC SỐ TOÁN HỌC CHUẨN Ở ĐÂY <---
-def calculate_correct_ju(nguyen, can_ngay, chi_ngay, tiet_khi):
-    # Cục gốc tương ứng với Thượng Nguyên - Giáp Tý (Đã khớp font chữ Hán giản thể với mảng wolong_jq_order)
+# ---> HÀM TÍNH CỤC SỐ CHUẨN: SỬ DỤNG CAN CHI GIỜ ĐẦU VÀO <---
+def calculate_correct_ju(nguyen, can_gio, chi_gio, tiet_khi):
     base_ju_dict = {
         "夏至": 9, "小暑": 7, "大暑": 6, "立秋": 5, "处暑": 6, "白露": 5,
         "秋分": 4, "寒露": 9, "霜降": 8, "立冬": 7, "小雪": 2, "大雪": 1,
@@ -93,10 +92,9 @@ def calculate_correct_ju(nguyen, can_ngay, chi_ngay, tiet_khi):
     yin_dun_terms = ["夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪"]
     dun_type = -1 if tiet_khi in yin_dun_terms else 1
     
-    # 2. Quy đổi Tuần Hoa Giáp của NGÀY (không phải giờ)
-    can_idx = thien_can.index(can_ngay)
-    chi_idx = dia_chi.index(chi_ngay)
-    # Công thức toán học tính index Tuần (từ 0 đến 5)
+    # 2. Quy đổi Tuần Hoa Giáp của GIỜ
+    can_idx = thien_can.index(can_gio)
+    chi_idx = dia_chi.index(chi_gio)
     tuan_index = ((can_idx - chi_idx) % 12) // 2
     
     # 3. Quy đổi hệ số Nguyên
@@ -296,11 +294,12 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
         day_o = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
         wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(day_o.getLunarMonth(), day_o.getLunarDay())
         
+        # curr_can và curr_chi ở đây chính là CAN CHI GIỜ
         curr_can = get_wushu_dun(wl_can, curr_chi)
         curr_hoa_giap = curr_can + curr_chi
         
-        # ---> THAY ĐỔI TẠI ĐÂY: Sử dụng hàm tính Cục số mới <---
-        curr_ju = calculate_correct_ju(wl_yuan, wl_can, wl_chi, wl_jieqi)
+        # ---> GỌI HÀM VÀ TRUYỀN VÀO CAN CHI GIỜ <---
+        curr_ju = calculate_correct_ju(wl_yuan, curr_can, curr_chi, wl_jieqi)
             
         data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
         
@@ -446,11 +445,12 @@ lunar_m = day_obj.getLunarMonth()
 lunar_d = day_obj.getLunarDay()
 
 wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(lunar_m, lunar_d)
+# can_gio và chi_gio ở đây chính là CAN CHI GIỜ
 can_gio = get_wushu_dun(wl_can, chi_gio)
 hoa_giap_hien_tai = can_gio + chi_gio
 
-# ---> THAY ĐỔI TẠI ĐÂY: Gọi hàm tính Cục số toán học mới <---
-wl_ju = calculate_correct_ju(wl_yuan, wl_can, wl_chi, wl_jieqi)
+# ---> GỌI HÀM VÀ TRUYỀN VÀO CAN CHI GIỜ <---
+wl_ju = calculate_correct_ju(wl_yuan, can_gio, chi_gio, wl_jieqi)
 
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
 b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
