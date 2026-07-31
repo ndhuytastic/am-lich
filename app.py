@@ -267,17 +267,26 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
         curr_can = get_wushu_dun(wl_can, curr_chi)
         curr_hoa_giap = curr_can + curr_chi
         
+        # Xác định Cục Gốc (Base Ju) từ mảng có sẵn
         yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
         base_ju = solar_term_ju[wl_jieqi][yuan_idx]
-        
-        # LOGIC TÍNH CỤC MỚI THEO XUN (TUẦN)
+
+        # BƯỚC 1: Tìm Tuần (Xun Leader) của Giờ hiện tại
         xun_leader = get_xun_leader(curr_can, curr_chi)
-        xun_index = ["戊", "己", "庚", "辛", "壬", "癸"].index(xun_leader)
+
+        # BƯỚC 2: Quy đổi Tuần ra Index (Từ 0 đến 5)
+        xun_list = ["戊", "己", "庚", "辛", "壬", "癸"]
+        xun_index = xun_list.index(xun_leader)
+
+        # BƯỚC 3: Toán học tính Cục Số (Ju) theo nguyên lý Bảng 4
         if wl_dun == "阳遁":
             curr_ju = (base_ju + xun_index) % 9
         else:
             curr_ju = (base_ju - xun_index) % 9
-        if curr_ju <= 0: curr_ju += 9
+
+        # Xử lý vòng lặp (Cục số từ 1 đến 9)
+        if curr_ju <= 0:
+            curr_ju += 9
             
         data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
         
@@ -426,17 +435,26 @@ wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(lunar_m, lu
 can_gio = get_wushu_dun(wl_can, chi_gio)
 hoa_giap_hien_tai = can_gio + chi_gio
     
+# Xác định Cục Gốc (Base Ju) từ mảng có sẵn
 yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
 base_ju = solar_term_ju[wl_jieqi][yuan_idx]
 
-# LOGIC TÍNH CỤC MỚI THEO XUN (TUẦN)
+# BƯỚC 1: Tìm Tuần (Xun Leader) của Giờ hiện tại
 xun_leader = get_xun_leader(can_gio, chi_gio)
-xun_index = ["戊", "己", "庚", "辛", "壬", "癸"].index(xun_leader)
+
+# BƯỚC 2: Quy đổi Tuần ra Index (Từ 0 đến 5)
+xun_list = ["戊", "己", "庚", "辛", "壬", "癸"]
+xun_index = xun_list.index(xun_leader)
+
+# BƯỚC 3: Toán học tính Cục Số (Ju) theo nguyên lý Bảng 4
 if wl_dun == "阳遁":
     wl_ju = (base_ju + xun_index) % 9
 else:
     wl_ju = (base_ju - xun_index) % 9
-if wl_ju <= 0: wl_ju += 9
+
+# Xử lý vòng lặp (Cục số từ 1 đến 9)
+if wl_ju <= 0:
+    wl_ju += 9
 
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
 b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
@@ -454,7 +472,6 @@ data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_
 
 bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {hoa_giap_hien_tai}时"
 title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>"
-# FORMAT LẠI SUBTITLE
 sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {wl_dun}{wl_ju}局 | {wl_yuan}元 {wl_jieqi}</h4>"
 
 qimen_board_html = render_html_table(data, menh_cung, p_circle, hao_dong, user_birth_star)
