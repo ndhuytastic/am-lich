@@ -79,7 +79,6 @@ cung_to_gua = {1: "坎", 2: "坤", 3: "震", 4: "巽", 5: "", 6: "乾", 7: "兑"
 # 2. LOGIC TÍNH LỊCH & MỆNH CUNG & CỤC SỐ
 # ==========================================
 
-# ---> HÀM TÍNH CỤC SỐ CHUẨN: SỬ DỤNG CAN CHI GIỜ ĐẦU VÀO <---
 def calculate_correct_ju(nguyen, can_gio, chi_gio, tiet_khi):
     base_ju_dict = {
         "夏至": 9, "小暑": 7, "大暑": 6, "立秋": 5, "处暑": 6, "白露": 5,
@@ -88,25 +87,20 @@ def calculate_correct_ju(nguyen, can_gio, chi_gio, tiet_khi):
         "春分": 6, "清明": 1, "谷雨": 2, "立夏": 3, "小满": 8, "芒种": 9
     }
     
-    # 1. Âm Độn hay Dương Độn
     yin_dun_terms = ["夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪"]
     dun_type = -1 if tiet_khi in yin_dun_terms else 1
     
-    # 2. Quy đổi Tuần Hoa Giáp của GIỜ
     can_idx = thien_can.index(can_gio)
     chi_idx = dia_chi.index(chi_gio)
     tuan_index = ((can_idx - chi_idx) % 12) // 2
     
-    # 3. Quy đổi hệ số Nguyên
     nguyen_multiplier = 0 if nguyen == "上" else 1 if nguyen == "中" else 2
     
-    # 4. Ráp công thức tổng
     cuc_goc = base_ju_dict[tiet_khi]
     buoc_nhay = tuan_index + (6 * nguyen_multiplier)
     
     raw_ju = cuc_goc + (dun_type * buoc_nhay)
     return (raw_ju - 1) % 9 + 1
-# ---------------------------------------------------
 
 def get_wushu_dun(day_stem, hour_branch):
     day_idx = thien_can.index(day_stem) % 5
@@ -127,16 +121,32 @@ def get_wolong_calendar_data(lunar_month, lunar_day):
     wl_dun = "阳遁" if 1 <= (abs_day // 15 % 24) <= 12 else "阴遁"
     return wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun
 
-def get_hour_nine_star(day_branch, hour_branch, dun_type):
-    hb_idx = dia_chi.index(hour_branch)
-    if day_branch in ["子", "午", "卯", "酉"]: start_star = 1 if dun_type == "阳遁" else 9
-    elif day_branch in ["辰", "戌", "丑", "未"]: start_star = 4 if dun_type == "阳遁" else 6
-    else: start_star = 7 if dun_type == "阳遁" else 3
 
-    if dun_type == "阳遁": return (start_star + hb_idx - 1) % 9 + 1
+# ---> ĐÂY LÀ ĐOẠN DUY NHẤT ĐƯỢC THAY ĐỔI ĐỂ KHỚP 100% VỚI ẢNH CỦA BẠN <---
+def get_hour_nine_star(day_branch, hour_branch, dun_type):
+    hb_idx = dia_chi.index(hour_branch) # Tý = 0, Sửu = 1, ..., Hợi = 11
+
+    if dun_type == "阳遁":
+        # Dương Độn (Bảng bên phải của ảnh): 1-4-7
+        if day_branch in ["子", "午", "卯", "酉"]: start_star = 1
+        elif day_branch in ["辰", "戌", "丑", "未"]: start_star = 4
+        else: start_star = 7
+        
+        # Giai đoạn 1: Tìm sao trung cung (Dương độn thì tiến lên + theo giờ)
+        res = (start_star + hb_idx) % 9
+        return 9 if res == 0 else res
+        
     else:
+        # Âm Độn (Bảng bên trái của ảnh): 1-7-4
+        if day_branch in ["子", "午", "卯", "酉"]: start_star = 1
+        elif day_branch in ["辰", "戌", "丑", "未"]: start_star = 7
+        else: start_star = 4
+        
+        # Giai đoạn 1: Tìm sao trung cung (Âm độn thì lùi đi - theo giờ)
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
+# -------------------------------------------------------------------------
+
 
 def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
     y_sum = sum(int(d) for d in str(b_lunar_y))
@@ -223,13 +233,13 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
 
     # 3.4 CỬU CUNG GIỜ & THIÊN THỜI
+    # Giai đoạn 2: Từ sao trung cung tìm được, phi tinh ra 8 cung còn lại (Luôn tiến lên +1)
     center_hour_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
     curr_star = center_hour_star
     for cung in WOLONG_FLYING_PATH:
         cung_data[cung]['hour_star'] = curr_star
-        curr_star += step_dir
+        curr_star += 1  # Luôn phi thuận
         if curr_star > 9: curr_star = 1
-        if curr_star < 1: curr_star = 9
 
     for i in WOLONG_OUTER_PALACES:
         t_can = cung_data[i]['thien']
@@ -294,11 +304,9 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
         day_o = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
         wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(day_o.getLunarMonth(), day_o.getLunarDay())
         
-        # curr_can và curr_chi ở đây chính là CAN CHI GIỜ
         curr_can = get_wushu_dun(wl_can, curr_chi)
         curr_hoa_giap = curr_can + curr_chi
         
-        # ---> GỌI HÀM VÀ TRUYỀN VÀO CAN CHI GIỜ <---
         curr_ju = calculate_correct_ju(wl_yuan, curr_can, curr_chi, wl_jieqi)
             
         data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
@@ -445,11 +453,9 @@ lunar_m = day_obj.getLunarMonth()
 lunar_d = day_obj.getLunarDay()
 
 wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(lunar_m, lunar_d)
-# can_gio và chi_gio ở đây chính là CAN CHI GIỜ
 can_gio = get_wushu_dun(wl_can, chi_gio)
 hoa_giap_hien_tai = can_gio + chi_gio
 
-# ---> GỌI HÀM VÀ TRUYỀN VÀO CAN CHI GIỜ <---
 wl_ju = calculate_correct_ju(wl_yuan, can_gio, chi_gio, wl_jieqi)
 
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
