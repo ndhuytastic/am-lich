@@ -15,7 +15,7 @@ WOLONG_OUTER_PALACES = [4, 9, 2, 7, 6, 1, 8, 3]
 WOLONG_FLYING_PATH = [5, 6, 7, 8, 9, 1, 2, 3, 4]
 WOLONG_NUM_TO_STEM = {1: "癸", 2: "丁", 3: "丙", 4: "乙", 5: "戊", 6: "己", 7: "庚", 8: "辛", 9: "壬", 0: "甲"}
 WOLONG_ORIGINAL_GATES = {1: "休门", 8: "生门", 3: "伤门", 4: "杜门", 9: "景门", 2: "死门", 7: "惊门", 6: "开门"}
-WOLONG_CLOCKWISE_GATES = ["景门", "死a门", "惊门", "开门", "休门", "生门", "伤门", "杜门"]
+WOLONG_CLOCKWISE_GATES = ["景门", "死门", "惊门", "开门", "休门", "生门", "伤门", "杜门"]
 
 solar_term_ju = {
     "冬至":[1,7,4], "小寒":[2,8,5], "大寒":[3,9,6], "立春":[8,5,2], "雨水":[9,6,3], "惊蛰":[1,7,4],
@@ -158,7 +158,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
     p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
 
-    # 3.2 DỰNG THIÊN BÀN (Lưu giữ nguyên thuật toán ĐÚNG của bạn)
+    # 3.2 DỰNG THIÊN BÀN 
     if p_circle == 5:
         for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i]
         if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio
@@ -169,13 +169,13 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         for i in range(8):
             cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
 
-    cung_data[5]['thien'] = "" # Luật: Thiên Bàn Trung Cung trống
+    cung_data[5]['thien'] = "" 
 
     for i in range(1, 10):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
         if cung_data[i]['dia'] == luc_nghi_gio: cung_data[i]['is_dia_bold'] = True
 
-    # 3.3 AN BÁT MÔN (Lưu giữ nguyên thuật toán ĐÚNG của bạn)
+    # 3.3 AN BÁT MÔN
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
@@ -254,7 +254,7 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
     pha_map = {"子":9, "丑":2, "寅":2, "卯":7, "辰":6, "巳":6, "午":1, "未":8, "申":8, "酉":3, "戌":4, "亥":4}
     palace_names = {1:"Bắc", 8:"Đông Bắc", 3:"Đông", 4:"Đông Nam", 9:"Nam", 2:"Tây Nam", 7:"Tây", 6:"Tây Bắc"}
     
-    for _ in range(2160): # Quét 30 ngày (20 phút / lần)
+    for _ in range(2160): 
         if len(found_dirs) == 8: break
         
         if curr_dt.hour >= 23: actual_date = curr_dt.date() + timedelta(days=1); chi_gio_idx = 0 
@@ -270,15 +270,14 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
         yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
         base_ju = solar_term_ju[wl_jieqi][yuan_idx]
         
-        # [ĐÃ FIX 1]: Toán học tính Cục Số (Ju) theo Bảng 4 của sách (Nhân 3)
-        hour_stem_index = thien_can.index(curr_can)
+        # LOGIC TÍNH CỤC MỚI THEO XUN (TUẦN)
+        xun_leader = get_xun_leader(curr_can, curr_chi)
+        xun_index = ["戊", "己", "庚", "辛", "壬", "癸"].index(xun_leader)
         if wl_dun == "阳遁":
-            curr_ju = (base_ju + (hour_stem_index * 3)) % 9
+            curr_ju = (base_ju + xun_index) % 9
         else:
-            curr_ju = (base_ju - (hour_stem_index * 3)) % 9
-            
+            curr_ju = (base_ju - xun_index) % 9
         if curr_ju <= 0: curr_ju += 9
-        # ==========================================
             
         data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
         
@@ -430,15 +429,14 @@ hoa_giap_hien_tai = can_gio + chi_gio
 yuan_idx = 0 if wl_yuan == "上" else 1 if wl_yuan == "中" else 2
 base_ju = solar_term_ju[wl_jieqi][yuan_idx]
 
-# [ĐÃ FIX 2]: Toán học tính Cục Số (Ju) theo Bảng 4 của sách (Nhân 3)
-hour_stem_index = thien_can.index(can_gio)
+# LOGIC TÍNH CỤC MỚI THEO XUN (TUẦN)
+xun_leader = get_xun_leader(can_gio, chi_gio)
+xun_index = ["戊", "己", "庚", "辛", "壬", "癸"].index(xun_leader)
 if wl_dun == "阳遁":
-    wl_ju = (base_ju + (hour_stem_index * 3)) % 9
+    wl_ju = (base_ju + xun_index) % 9
 else:
-    wl_ju = (base_ju - (hour_stem_index * 3)) % 9
-    
+    wl_ju = (base_ju - xun_index) % 9
 if wl_ju <= 0: wl_ju += 9
-# ==========================================
 
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
 b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
@@ -456,7 +454,8 @@ data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_
 
 bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {hoa_giap_hien_tai}时"
 title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>"
-sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {wl_dun}{wl_ju}局</h4>"
+# FORMAT LẠI SUBTITLE
+sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>卧龙奇门 | {wl_dun}{wl_ju}局 | {wl_yuan}元 {wl_jieqi}</h4>"
 
 qimen_board_html = render_html_table(data, menh_cung, p_circle, hao_dong, user_birth_star)
 
