@@ -43,16 +43,19 @@ TRIGRAM_BIN = {"地": [0,0,0], "山": [0,0,1], "水": [0,1,0], "风": [0,1,1], "
 BIN_TO_TRIGRAM = {tuple(v): k for k, v in TRIGRAM_BIN.items()}
 TRIGRAM_UNICODE = {"天": "☰", "泽": "☱", "火": "☲", "雷": "☳", "风": "☴", "水": "☵", "山": "☶", "地": "☷"}
 
+# ---> BẢNG 64 QUẺ MỚI (CHÍNH XÁC 100% THEO ẢNH TRANG 98) <---
+# Quy tắc mapping: EVAL_DICT[Thượng Quái][Hạ Quái]
 EVAL_DICT = {
-    "风": {"风":"〇", "火":"△", "地":"✕", "雷":"〇", "泽":"△", "山":"〇", "水":"✕", "天":"〇"},
-    "天": {"风":"✕", "火":"△", "地":"✕", "雷":"〇", "泽":"✕", "山":"△", "水":"✕", "天":"✕"},
-    "水": {"风":"✕", "火":"✕", "地":"✕", "雷":"〇", "泽":"✕", "山":"✕", "水":"〇", "天":"✕"},
-    "泽": {"风":"△", "火":"✕", "地":"✕", "雷":"✕", "泽":"✕", "山":"✕", "水":"〇", "天":"〇"},
-    "山": {"风":"△", "火":"〇", "地":"✕", "雷":"✕", "泽":"✕", "山":"〇", "水":"✕", "天":"✕"},
-    "火": {"风":"✕", "火":"〇", "地":"〇", "雷":"✕", "泽":"✕", "山":"△", "水":"〇", "天":"✕"},
-    "地": {"风":"〇", "火":"〇", "地":"〇", "雷":"✕", "泽":"✕", "山":"〇", "水":"△", "天":"△"},
-    "雷": {"风":"✕", "火":"△", "地":"〇", "雷":"〇", "泽":"〇", "山":"△", "水":"〇", "天":"✕"}
+    "天": {"天":"✕", "地":"△", "水":"✕", "火":"✕", "风":"〇", "雷":"✕", "山":"✕", "泽":"〇"},
+    "地": {"天":"✕", "地":"〇", "水":"✕", "火":"〇", "风":"✕", "雷":"〇", "山":"✕", "泽":"✕"},
+    "水": {"天":"✕", "地":"△", "水":"〇", "火":"〇", "风":"✕", "雷":"〇", "山":"✕", "泽":"✕"},
+    "火": {"天":"△", "地":"〇", "水":"✕", "火":"〇", "风":"△", "雷":"△", "山":"〇", "泽":"✕"},
+    "风": {"天":"✕", "地":"〇", "水":"✕", "火":"✕", "风":"〇", "雷":"✕", "山":"△", "泽":"△"},
+    "雷": {"天":"〇", "地":"✕", "水":"〇", "火":"✕", "风":"〇", "雷":"〇", "山":"✕", "泽":"✕"},
+    "山": {"天":"△", "地":"〇", "水":"✕", "火":"△", "风":"〇", "雷":"△", "山":"〇", "泽":"✕"},
+    "泽": {"天":"✕", "地":"✕", "水":"〇", "火":"✕", "风":"△", "雷":"〇", "山":"✕", "泽":"✕"}
 }
+# -------------------------------------------------------------
 
 HEX_NAME_DICT = {
     ("天","天"): (1,"Bát Thuần Càn"), ("地","地"): (2,"Bát Thuần Khôn"), ("水","雷"): (3,"Thủy Lôi Truân"), ("山","水"): (4,"Sơn Thủy Mông"),
@@ -122,33 +125,27 @@ def get_wolong_calendar_data(lunar_month, lunar_day):
     return wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun
 
 
-# ---> ĐÂY LÀ ĐOẠN DUY NHẤT ĐƯỢC THAY ĐỔI ĐỂ KHỚP 100% VỚI ẢNH CỦA BẠN <---
 def get_hour_nine_star(day_branch, hour_branch, dun_type):
-    hb_idx = dia_chi.index(hour_branch) # Tý = 0, Sửu = 1, ..., Hợi = 11
+    hb_idx = dia_chi.index(hour_branch) 
 
     if dun_type == "阳遁":
-        # Dương Độn (Bảng bên phải của ảnh): 1-4-7
         if day_branch in ["子", "午", "卯", "酉"]: start_star = 1
         elif day_branch in ["辰", "戌", "丑", "未"]: start_star = 4
         else: start_star = 7
         
-        # Giai đoạn 1: Tìm sao trung cung (Dương độn thì tiến lên + theo giờ)
         res = (start_star + hb_idx) % 9
         return 9 if res == 0 else res
         
     else:
-        # Âm Độn (Bảng bên trái của ảnh): 1-7-4
         if day_branch in ["子", "午", "卯", "酉"]: start_star = 1
         elif day_branch in ["辰", "戌", "丑", "未"]: start_star = 7
         else: start_star = 4
         
-        # Giai đoạn 1: Tìm sao trung cung (Âm độn thì lùi đi - theo giờ)
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
-# -------------------------------------------------------------------------
 
-
-def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
+# ---> ĐÃ CẬP NHẬT: XỬ LÝ NAM NỮ KHI TRUNG CUNG (5) <---
+def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
     y_sum = sum(int(d) for d in str(b_lunar_y))
     star_y = 11 - (y_sum % 9 or 9)
     if star_y <= 0: star_y += 9
@@ -167,7 +164,13 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
         if val == 0: val = 9
         if val == star_m:
             mc = yin_path[i]
-            return 2 if mc == 5 else mc
+            
+            # Nếu Mệnh Cung rơi vào 5 (Trung Cung)
+            if mc == 5:
+                return 8 if gender == "Nam" else 2 # Nam Ký Cấn (8), Nữ Ký Khôn (2)
+            
+            return mc
+# --------------------------------------------------------
 
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
@@ -233,12 +236,11 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
 
     # 3.4 CỬU CUNG GIỜ & THIÊN THỜI
-    # Giai đoạn 2: Từ sao trung cung tìm được, phi tinh ra 8 cung còn lại (Luôn tiến lên +1)
     center_hour_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
     curr_star = center_hour_star
     for cung in WOLONG_FLYING_PATH:
         cung_data[cung]['hour_star'] = curr_star
-        curr_star += 1  # Luôn phi thuận
+        curr_star += 1  
         if curr_star > 9: curr_star = 1
 
     for i in WOLONG_OUTER_PALACES:
@@ -435,13 +437,16 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-col1, col2, col3, col4, col5, col6 = st.columns([1.2, 0.8, 0.8, 1.2, 0.8, 0.8])
+# ---> ĐÃ CẬP NHẬT GIAO DIỆN: THÊM NÚT CHỌN NAM NỮ VÀO GIỮA <---
+col1, col2, col3, col4, col5, col6, col7 = st.columns([1.1, 0.8, 0.8, 1.2, 0.6, 0.7, 0.7])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút Xem", options=list(range(60)), index=st.session_state.init_dt.minute)
 with col4: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
-with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
-with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
+with col5: gender = st.selectbox("Giới", ["Nam", "Nữ"]) # Thêm nút Giới Tính ở đây
+with col6: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
+with col7: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
+# ---------------------------------------------------------------
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
@@ -468,7 +473,9 @@ b_lunar_m = b_day_obj.getLunarMonth()
 
 b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
 user_birth_star = get_hour_nine_star(dia_chi[b_day_obj.getDayGZ().dz], b_chi_gio, b_wl_dun)
-menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m)
+
+# Truyền thêm biến gender vào hàm tính Mệnh Cung
+menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m, gender) 
 
 data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_dun, wl_ju, user_dt)
 
