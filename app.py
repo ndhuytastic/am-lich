@@ -43,19 +43,17 @@ TRIGRAM_BIN = {"地": [0,0,0], "山": [0,0,1], "水": [0,1,0], "风": [0,1,1], "
 BIN_TO_TRIGRAM = {tuple(v): k for k, v in TRIGRAM_BIN.items()}
 TRIGRAM_UNICODE = {"天": "☰", "泽": "☱", "火": "☲", "雷": "☳", "风": "☴", "水": "☵", "山": "☶", "地": "☷"}
 
-# ---> BẢNG 64 QUẺ MỚI (CHÍNH XÁC 100% THEO ẢNH TRANG 98) <---
-# Quy tắc mapping: EVAL_DICT[Thượng Quái][Hạ Quái]
+# BẢNG 64 QUẺ CHUẨN XÁC THEO TIÊN THIÊN BÁT QUÁI
 EVAL_DICT = {
-    "天": {"天":"✕", "地":"△", "水":"✕", "火":"✕", "风":"〇", "雷":"✕", "山":"✕", "泽":"〇"},
-    "地": {"天":"✕", "地":"〇", "水":"✕", "火":"〇", "风":"✕", "雷":"〇", "山":"✕", "泽":"✕"},
-    "水": {"天":"✕", "地":"△", "水":"〇", "火":"〇", "风":"✕", "雷":"〇", "山":"✕", "泽":"✕"},
-    "火": {"天":"△", "地":"〇", "水":"✕", "火":"〇", "风":"△", "雷":"△", "山":"〇", "泽":"✕"},
-    "风": {"天":"✕", "地":"〇", "水":"✕", "火":"✕", "风":"〇", "雷":"✕", "山":"△", "泽":"△"},
-    "雷": {"天":"〇", "地":"✕", "水":"〇", "火":"✕", "风":"〇", "雷":"〇", "山":"✕", "泽":"✕"},
-    "山": {"天":"△", "地":"〇", "水":"✕", "火":"△", "风":"〇", "雷":"△", "山":"〇", "泽":"✕"},
-    "泽": {"天":"✕", "地":"✕", "水":"〇", "火":"✕", "风":"△", "雷":"〇", "山":"✕", "泽":"✕"}
+    "风": {"泽":"〇", "天":"△", "风":"✕", "火":"〇", "水":"△", "雷":"〇", "地":"✕", "山":"〇"},
+    "天": {"泽":"✕", "天":"△", "风":"✕", "火":"〇", "水":"✕", "雷":"△", "地":"✕", "山":"✕"},
+    "水": {"泽":"✕", "天":"✕", "风":"✕", "火":"〇", "水":"✕", "雷":"✕", "地":"〇", "山":"✕"},
+    "泽": {"泽":"△", "天":"✕", "风":"✕", "火":"✕", "水":"✕", "雷":"✕", "地":"〇", "山":"〇"},
+    "山": {"泽":"△", "天":"〇", "风":"✕", "火":"✕", "水":"✕", "雷":"〇", "地":"✕", "山":"✕"},
+    "火": {"泽":"✕", "天":"〇", "风":"〇", "火":"✕", "水":"✕", "雷":"△", "地":"〇", "山":"✕"},
+    "地": {"泽":"〇", "天":"〇", "风":"〇", "火":"✕", "水":"✕", "雷":"〇", "地":"△", "山":"△"},
+    "雷": {"泽":"✕", "天":"△", "风":"〇", "火":"〇", "水":"〇", "雷":"△", "地":"〇", "山":"✕"}
 }
-# -------------------------------------------------------------
 
 HEX_NAME_DICT = {
     ("天","天"): (1,"Bát Thuần Càn"), ("地","地"): (2,"Bát Thuần Khôn"), ("水","雷"): (3,"Thủy Lôi Truân"), ("山","水"): (4,"Sơn Thủy Mông"),
@@ -124,7 +122,6 @@ def get_wolong_calendar_data(lunar_month, lunar_day):
     wl_dun = "阳遁" if 1 <= (abs_day // 15 % 24) <= 12 else "阴遁"
     return wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun
 
-
 def get_hour_nine_star(day_branch, hour_branch, dun_type):
     hb_idx = dia_chi.index(hour_branch) 
 
@@ -144,7 +141,6 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
 
-# ---> ĐÃ CẬP NHẬT: XỬ LÝ NAM NỮ KHI TRUNG CUNG (5) <---
 def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
     y_sum = sum(int(d) for d in str(b_lunar_y))
     star_y = 11 - (y_sum % 9 or 9)
@@ -165,12 +161,10 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
         if val == star_m:
             mc = yin_path[i]
             
-            # Nếu Mệnh Cung rơi vào 5 (Trung Cung)
             if mc == 5:
-                return 8 if gender == "Nam" else 2 # Nam Ký Cấn (8), Nữ Ký Khôn (2)
+                return 8 if gender == "Nam" else 2 
             
             return mc
-# --------------------------------------------------------
 
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
@@ -407,6 +401,7 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
             if p == 5:
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
+                    {hour_star_html}
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
@@ -437,16 +432,15 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-# ---> ĐÃ CẬP NHẬT GIAO DIỆN: THÊM NÚT CHỌN NAM NỮ VÀO GIỮA <---
-col1, col2, col3, col4, col5, col6, col7 = st.columns([1.1, 0.8, 0.8, 1.2, 0.6, 0.7, 0.7])
+# Giao diện sắp xếp lại: Đưa Giới Tính lên trước Ngày Sinh
+col1, col2, col3, col4, col5, col6, col7 = st.columns([1.1, 0.8, 0.8, 0.6, 1.2, 0.7, 0.7])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút Xem", options=list(range(60)), index=st.session_state.init_dt.minute)
-with col4: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
-with col5: gender = st.selectbox("Giới", ["Nam", "Nữ"]) # Thêm nút Giới Tính ở đây
+with col4: gender = st.selectbox("Giới", ["Nam", "Nữ"]) 
+with col5: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col6: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
 with col7: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
-# ---------------------------------------------------------------
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
@@ -474,7 +468,6 @@ b_lunar_m = b_day_obj.getLunarMonth()
 b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
 user_birth_star = get_hour_nine_star(dia_chi[b_day_obj.getDayGZ().dz], b_chi_gio, b_wl_dun)
 
-# Truyền thêm biến gender vào hàm tính Mệnh Cung
 menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m, gender) 
 
 data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_dun, wl_ju, user_dt)
