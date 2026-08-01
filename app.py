@@ -141,6 +141,7 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
 
+# ---> ĐÃ SỬA: Nam ra 2 (Khôn), Nữ ra 8 (Cấn) theo đúng yêu cầu <---
 def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
     y_sum = sum(int(d) for d in str(b_lunar_y))
     star_y = 11 - (y_sum % 9 or 9)
@@ -162,9 +163,10 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
             mc = yin_path[i]
             
             if mc == 5:
-                return 8 if gender == "Nam" else 2 
+                return 2 if gender == "Nam" else 8 
             
             return mc
+# ----------------------------------------------------------------
 
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
@@ -432,7 +434,6 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-# Giao diện sắp xếp lại: Đưa Giới Tính lên trước Ngày Sinh
 col1, col2, col3, col4, col5, col6, col7 = st.columns([1.1, 0.8, 0.8, 0.6, 1.2, 0.7, 0.7])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
