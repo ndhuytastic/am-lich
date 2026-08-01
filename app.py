@@ -496,7 +496,7 @@ if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất (Cho 8 Hướng)
         found_dirs = find_good_times(user_dt, menh_cung, user_birth_star)
     
     if found_dirs:
-        st.success("Thời điểm Đại Cát gần nhất")
+        st.success("Thời điểm Đại Cát Gần Nhất")
         for p in [1, 8, 3, 4, 9, 2, 7, 6]:
             if p in found_dirs:
                 res = found_dirs[p]
