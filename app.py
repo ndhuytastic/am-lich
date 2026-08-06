@@ -501,7 +501,7 @@ combined_html = f"""
 st.components.v1.html(combined_html, height=520, scrolling=False)
 
 st.markdown("<div style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
-if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất (Top 5 Cho 8 Hướng)", use_container_width=True):
+if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất", use_container_width=True):
     with st.spinner("Đang quét các mốc 20 phút tương lai..."):
         found_dirs = find_good_times(user_dt, menh_cung, user_birth_star)
     
