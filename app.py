@@ -454,7 +454,7 @@ b_day_obj = sxtwl.fromSolar(b_actual_date.year, b_actual_date.month, b_actual_da
 b_lunar_m = b_day_obj.getLunarMonth()
 
 b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
-user_birth_star = get_hour_nine_star(dia_chi[b_day_obj.getDayGZ().dz], b_chi_gio, b_wl_dun)
+user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
 
 menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m, gender) 
 
