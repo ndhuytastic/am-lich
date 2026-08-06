@@ -141,7 +141,8 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
 
-def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
+# --- ĐÃ SỬA: TỨ QUÝ KHUYNH CUNG PHÁP THEO THÁNG ÂM ---
+def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
     y_sum = sum(int(d) for d in str(b_lunar_y))
     star_y = 11 - (y_sum % 9 or 9)
     if star_y <= 0: star_y += 9
@@ -160,8 +161,17 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m, gender):
         if val == 0: val = 9
         if val == star_m:
             mc = yin_path[i]
-            if mc == 5: return 2 if gender == "Nam" else 8 
-            return mc
+            
+            # Xử lý rơi vào Trung Cung bằng Mùa (Tháng Âm Lịch)
+            if mc == 5:
+                is_redirected = True
+                if b_lunar_m in [1, 2, 3]: return 6, is_redirected    # Mùa Xuân -> Càn (6)
+                elif b_lunar_m in [4, 5, 6]: return 4, is_redirected  # Mùa Hè -> Tốn (4)
+                elif b_lunar_m in [7, 8, 9]: return 8, is_redirected  # Mùa Thu -> Cấn (8)
+                else: return 2, is_redirected                         # Mùa Đông -> Khôn (2)
+            
+            return mc, False # Không kẹt ở trung cung
+# --------------------------------------------------------
 
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
@@ -207,7 +217,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
         if cung_data[i]['dia'] == luc_nghi_gio: cung_data[i]['is_dia_bold'] = True
 
-    # Vẫn giữ tính Bát Môn ngầm bên dưới để xét Quẻ Dịch (chỉ ẩn hiển thị trên UI)
+    # Ẩn logic Bát môn khỏi UI nhưng vẫn tính toán ngầm
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
@@ -236,7 +246,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         d_can = cung_data[i]['dia']
         if not t_can or not d_can: continue
         
-        # --- ĐÃ CHỈNH SỬA: CHỈ HIỂN THỊ GIÁP NẾU TRÙNG ---
+        # CHỈ HIỂN THỊ GIÁP NẾU TRÙNG
         if t_can == luc_nghi_gio and d_can == luc_nghi_gio:
             cung_data[i]['thien_thoi'] = THIEN_THOI_DICT["甲"]["甲"]
         elif t_can == luc_nghi_gio:
@@ -270,6 +280,7 @@ def evaluate_hexagram(cung_data, menh_cung, p_circle, hao_dong):
     
     return EVAL_DICT.get(mut_upper, {}).get(mut_lower, "✕")
 
+# --- ĐÃ SỬA: TÌM 5 THỜI ĐIỂM GẦN NHẤT CHO MỖI HƯỚNG ---
 def find_good_times(start_dt, menh_cung, user_birth_star):
     found_dirs = {}
     minute_rounded = (start_dt.minute // 20) * 20
@@ -279,8 +290,10 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
     pha_map = {"子":9, "丑":2, "寅":2, "卯":7, "辰":6, "巳":6, "午":1, "未":8, "申":8, "酉":3, "戌":4, "亥":4}
     palace_names = {1:"Bắc", 8:"Đông Bắc", 3:"Đông", 4:"Đông Nam", 9:"Nam", 2:"Tây Nam", 7:"Tây", 6:"Tây Bắc"}
     
-    for _ in range(2160): 
-        if len(found_dirs) == 8: break
+    for _ in range(2160): # Quét trong vòng 30 ngày tương lai
+        # Dừng nếu tất cả 8 hướng đều đã đủ 5 kết quả
+        if len(found_dirs) == 8 and all(len(d["times"]) >= 5 for d in found_dirs.values()):
+            break
         
         if curr_dt.hour >= 23: actual_date = curr_dt.date() + timedelta(days=1); chi_gio_idx = 0 
         else: actual_date = curr_dt.date(); chi_gio_idx = (curr_dt.hour + 1) // 2 % 12
@@ -312,15 +325,18 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
             sat_list.append(pha_map[curr_chi]) 
             
             for p in WOLONG_OUTER_PALACES:
-                if p in found_dirs: continue
-                # --- ĐÃ XÓA ĐIỀU KIỆN LỌC BÁT MÔN THEO YÊU CẦU ---
                 if "〇" not in data[p]['thien_thoi'] or "✕" in data[p]['thien_thoi']: continue
                 if p in sat_list: continue
                 
-                end_dt = curr_dt + timedelta(minutes=19, seconds=59)
-                time_str = f"{curr_dt.strftime('%d/%m')} ({curr_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')})"
+                # Khởi tạo key nếu chưa có
+                if p not in found_dirs:
+                    found_dirs[p] = {"dir": palace_names[p], "times": []}
                 
-                found_dirs[p] = {"dir": palace_names[p], "time": time_str}
+                # Thêm thời gian nếu chưa đủ 5
+                if len(found_dirs[p]["times"]) < 5:
+                    end_dt = curr_dt + timedelta(minutes=19, seconds=59)
+                    time_str = f"{curr_dt.strftime('%d/%m')} ({curr_dt.strftime('%H:%M')}-{end_dt.strftime('%H:%M')})"
+                    found_dirs[p]["times"].append(time_str)
         
         curr_dt += timedelta(minutes=20)
             
@@ -329,7 +345,7 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
 # ==========================================
 # 5. GIAO DIỆN HTML RENDER 
 # ==========================================
-def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star):
+def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, user_birth_star):
     upper_gate = cung_data[menh_cung]['mon']
     lower_gate = cung_data[p_circle]['mon']
     upper_tri = GATE_TO_TRIGRAM.get(upper_gate, "天")
@@ -374,7 +390,12 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
         html += "<tr>"
         for p in row:
             d = cung_data[p]
-            bg_color = "#e8e8e8" if p == menh_cung else "transparent"
+            
+            # --- ĐÃ CHỈNH SỬA: MÀU NỀN CUNG BỊ BẺ HƯỚNG SẼ MÀU VÀNG NHẠT ---
+            if p == menh_cung:
+                bg_color = "#fff3cd" if is_redirected else "#e8e8e8"
+            else:
+                bg_color = "transparent"
             
             thien_weight = "bold" if d['is_thien_bold'] else "normal"
             dia_weight = "bold" if d['is_dia_bold'] else "normal"
@@ -390,7 +411,7 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
             if p == 5:
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
-                    {hour_star_html} <!-- ĐÃ CẬP NHẬT: Hiện Cửu cung giờ ở Trung Cung -->
+                    {hour_star_html} 
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
@@ -406,7 +427,7 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
                         <div class="item-right"><span class="wolong-stem">{thien_html}</span></div>
                     </div>
                     <div class="row-bot">
-                        <div class="item-left"></div> <!-- ĐÃ CẬP NHẬT: Ẩn Bát Môn -->
+                        <div class="item-left"></div> <!-- ẨN BÁT MÔN -->
                         <div class="item-right"><span class="wolong-stem">{dia_html}</span></div>
                     </div>
                 </td>"""
@@ -421,14 +442,14 @@ def render_html_table(cung_data, menh_cung, p_circle, hao_dong, user_birth_star)
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-col1, col2, col3, col4, col5, col6, col7 = st.columns([1.1, 0.8, 0.8, 0.6, 1.2, 0.7, 0.7])
+# Giao diện UI: Đã loại bỏ chọn Giới Tính
+col1, col2, col3, col4, col5, col6 = st.columns([1.1, 0.8, 0.8, 1.2, 0.7, 0.7])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút Xem", options=list(range(60)), index=st.session_state.init_dt.minute)
-with col4: gender = st.selectbox("Giới", ["Nam", "Nữ"]) 
-with col5: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
-with col6: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
-with col7: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
+with col4: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
+with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
+with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
@@ -456,17 +477,17 @@ b_lunar_m = b_day_obj.getLunarMonth()
 b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
 user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
 
-menh_cung = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m, gender) 
+# Lấy giá trị Menh Cung và Biến kiểm tra bị đổi hướng
+menh_cung, is_redirected = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m) 
 
 data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_dun, wl_ju, user_dt)
 
-# --- ĐÃ CẬP NHẬT: ĐỔI ĐỊNH DẠNG TEXT TIÊU ĐỀ ---
+# ĐỊNH DẠNG TIÊU ĐỀ
 bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {wl_can}{wl_chi} | {wl_jieqi} {wl_yuan}元"
 title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>"
 sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>{hoa_giap_hien_tai}时 | {wl_dun}{wl_ju}局</h4>"
-# ------------------------------------------------
 
-qimen_board_html = render_html_table(data, menh_cung, p_circle, hao_dong, user_birth_star)
+qimen_board_html = render_html_table(data, menh_cung, is_redirected, p_circle, hao_dong, user_birth_star)
 
 combined_html = f"""
     <div style="display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 10px;">
@@ -480,17 +501,18 @@ combined_html = f"""
 st.components.v1.html(combined_html, height=520, scrolling=False)
 
 st.markdown("<div style='max-width: 480px; margin: 0 auto;'>", unsafe_allow_html=True)
-if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất (Cho 8 Hướng)", use_container_width=True):
+if st.button("🔍 Tìm Thời Điểm Đại Cát Gần Nhất (Top 5 Cho 8 Hướng)", use_container_width=True):
     with st.spinner("Đang quét các mốc 20 phút tương lai..."):
         found_dirs = find_good_times(user_dt, menh_cung, user_birth_star)
     
     if found_dirs:
-        st.success("Thời điểm Đại Cát gần nhất")
+        st.success("Top 5 thời điểm Đại Cát")
         for p in [1, 8, 3, 4, 9, 2, 7, 6]:
-            if p in found_dirs:
+            if p in found_dirs and found_dirs[p]["times"]:
                 res = found_dirs[p]
-                st.markdown(f"🧭 Hướng **{res['dir']}** 👉 {res['time']}") # Đã bỏ hiển thị (Cửa: ...)
+                times_formatted = " | ".join(res["times"])
+                st.markdown(f"🧭 Hướng **{res['dir']}** 👉 {times_formatted}")
             else:
                 palace_names = {1:"Bắc", 8:"Đông Bắc", 3:"Đông", 4:"Đông Nam", 9:"Nam", 2:"Tây Nam", 7:"Tây", 6:"Tây Bắc"}
-                st.markdown(f"🧭 Hướng **{palace_names[p]}** 👉 Không tìm thấy thời điểm đại cát trong 30 ngày tới.")
+                st.markdown(f"🧭 Hướng **{palace_names[p]}** 👉 Không tìm thấy đủ thời điểm đại cát.")
 st.markdown("</div>", unsafe_allow_html=True)
