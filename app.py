@@ -513,13 +513,13 @@ st.markdown("<div style='max-width: 900px; margin: 0 auto;'>", unsafe_allow_html
 
 # 7 nút chọn chia đều 1 hàng, hoàn toàn bằng tiếng Trung
 f_col1, f_col2, f_col3, f_col4, f_col5, f_col6, f_col7 = st.columns(7)
-with f_col1: val_dir = st.selectbox("方向", ["无", "S (165 - 195)", "SW (195 - 255)", "W (255 - 285)", "NW (285 - 345)", "N (345 - 15)", "NE (15 - 75)", "E (75 - 135)", "SE (135 - 165)"])
-with f_col2: val_tcan = st.selectbox("天盘干", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
-with f_col3: val_dcan = st.selectbox("地盘干", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
-with f_col4: val_mon = st.selectbox("门", ["无", "休门", "生门", "伤门", "杜门", "景门", "死门", "惊门", "开门"])
-with f_col5: val_tt = st.selectbox("天时", ["无", "吉"])
-with f_col6: val_dl = st.selectbox("地利", ["无", "吉"])
-with f_col7: val_nh = st.selectbox("人和", ["无", "吉"])
+with f_col1: val_dir = st.selectbox("Hướng", ["无", "S (165 - 195)", "SW (195 - 255)", "W (255 - 285)", "NW (285 - 345)", "N (345 - 15)", "NE (15 - 75)", "E (75 - 135)", "SE (135 - 165)"])
+with f_col2: val_tcan = st.selectbox("Thiên Bàn", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
+with f_col3: val_dcan = st.selectbox("Địa Bàn", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
+with f_col4: val_mon = st.selectbox("Môn", ["无", "休门", "生门", "伤门", "杜门", "景门", "死门", "惊门", "开门"])
+with f_col5: val_tt = st.selectbox("Thiên Thời", ["无", "吉"])
+with f_col6: val_dl = st.selectbox("Địa Lợi", ["无", "吉"])
+with f_col7: val_nh = st.selectbox("Nhân Hòa", ["无", "吉"])
 
 # Gom dữ liệu filter
 filters = {
@@ -532,7 +532,7 @@ filters = {
     "nhan_hoa": val_nh
 }
 
-if st.button("开始寻找最佳时机", use_container_width=True):
+if st.button("寻找最佳时机", use_container_width=True):
     with st.spinner("正在计算未来时间点..."):
         results = find_custom_good_times(user_dt, menh_cung, user_birth_star, filters)
     
