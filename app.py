@@ -141,7 +141,6 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
         res = (start_star - hb_idx) % 9
         return 9 if res == 0 else res
 
-# --- ĐÃ SỬA: TỨ QUÝ KHUYNH CUNG PHÁP THEO THÁNG ÂM ---
 def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
     y_sum = sum(int(d) for d in str(b_lunar_y))
     star_y = 11 - (y_sum % 9 or 9)
@@ -171,7 +170,6 @@ def calc_menh_cung(b_year, b_lunar_y, b_lunar_m):
                 else: return 2, is_redirected                         # Mùa Đông -> Khôn (2)
             
             return mc, False # Không kẹt ở trung cung
-# --------------------------------------------------------
 
 # ==========================================
 # 3. LẬP QUẺ CHÂN TRUYỀN & BÁT MÔN DỊCH
@@ -217,7 +215,7 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
         if cung_data[i]['dia'] == luc_nghi_gio: cung_data[i]['is_dia_bold'] = True
 
-    # Ẩn logic Bát môn khỏi UI nhưng vẫn tính toán ngầm
+    # Vẫn tính toán logic Bát môn ngầm bình thường
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
@@ -280,7 +278,6 @@ def evaluate_hexagram(cung_data, menh_cung, p_circle, hao_dong):
     
     return EVAL_DICT.get(mut_upper, {}).get(mut_lower, "✕")
 
-# --- ĐÃ SỬA: TÌM 5 THỜI ĐIỂM GẦN NHẤT CHO MỖI HƯỚNG ---
 def find_good_times(start_dt, menh_cung, user_birth_star):
     found_dirs = {}
     minute_rounded = (start_dt.minute // 20) * 20
@@ -325,6 +322,9 @@ def find_good_times(start_dt, menh_cung, user_birth_star):
             sat_list.append(pha_map[curr_chi]) 
             
             for p in WOLONG_OUTER_PALACES:
+                # THÊM ĐIỀU KIỆN 3 CỬA ĐẠI CÁT: SINH, KHAI, CẢNH
+                if data[p]['mon'] not in ["生门", "开门", "景门"]: continue
+                
                 if "〇" not in data[p]['thien_thoi'] or "✕" in data[p]['thien_thoi']: continue
                 if p in sat_list: continue
                 
@@ -391,7 +391,6 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
         for p in row:
             d = cung_data[p]
             
-            # --- ĐÃ CHỈNH SỬA: MÀU NỀN CUNG BỊ BẺ HƯỚNG SẼ MÀU VÀNG NHẠT ---
             if p == menh_cung:
                 bg_color = "#fff3cd" if is_redirected else "#e8e8e8"
             else:
@@ -418,6 +417,7 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
                     <div style="position: absolute; bottom: 6px; right: 6px; font-size: 16px; font-weight: {dia_weight}; color: #b30000;">{d['dia']}</div>
                 </td>"""
             else:
+                # ĐÃ HIỂN THỊ BÁT MÔN VÀO DÒNG DIV "item-left" THỨ 2
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color};">
                     {hour_star_html}
@@ -427,7 +427,7 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
                         <div class="item-right"><span class="wolong-stem">{thien_html}</span></div>
                     </div>
                     <div class="row-bot">
-                        <div class="item-left"></div> <!-- ẨN BÁT MÔN -->
+                        <div class="item-left">{d['mon']}</div>
                         <div class="item-right"><span class="wolong-stem">{dia_html}</span></div>
                     </div>
                 </td>"""
@@ -442,7 +442,6 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-# Giao diện UI: Đã loại bỏ chọn Giới Tính
 col1, col2, col3, col4, col5, col6 = st.columns([1.1, 0.8, 0.8, 1.2, 0.7, 0.7])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
@@ -477,12 +476,10 @@ b_lunar_m = b_day_obj.getLunarMonth()
 b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
 user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
 
-# Lấy giá trị Menh Cung và Biến kiểm tra bị đổi hướng
 menh_cung, is_redirected = calc_menh_cung(b_actual_date.year, b_day_obj.getLunarYear(), b_lunar_m) 
 
 data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, hoa_giap_hien_tai, wl_dun, wl_ju, user_dt)
 
-# ĐỊNH DẠNG TIÊU ĐỀ
 bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {wl_can}{wl_chi} | {wl_jieqi} {wl_yuan}元"
 title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>"
 sub_title = f"<h4 style='margin-top:0px; margin-bottom:8px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>{hoa_giap_hien_tai}时 | {wl_dun}{wl_ju}局</h4>"
