@@ -305,7 +305,7 @@ def find_custom_good_times(start_dt, menh_cung, user_birth_star, filters):
         data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
         
         palaces_to_check = WOLONG_OUTER_PALACES
-        if filters["dir"] != "Bỏ qua":
+        if filters["dir"] != "无":
             palaces_to_check = [dir_map[filters["dir"]]]
             
         hex_eval = evaluate_hexagram(data, menh_cung, p_circle, hao_dong)
@@ -326,24 +326,24 @@ def find_custom_good_times(start_dt, menh_cung, user_birth_star, filters):
         
         for p in palaces_to_check:
             # 1. Thiên Bàn Can (天盘干)
-            if filters["t_can"] != "Bỏ qua" and data[p]['thien'] != filters["t_can"]: continue
+            if filters["t_can"] != "无" and data[p]['thien'] != filters["t_can"]: continue
             # 2. Địa Bàn Can (地盘干)
-            if filters["d_can"] != "Bỏ qua" and data[p]['dia'] != filters["d_can"]: continue
+            if filters["d_can"] != "无" and data[p]['dia'] != filters["d_can"]: continue
             # 3. Môn (门)
-            if filters["mon"] != "Bỏ qua" and data[p]['mon'] != filters["mon"]: continue
+            if filters["mon"] != "无" and data[p]['mon'] != filters["mon"]: continue
             # 4. Thiên Thời (天时)
-            if filters["thien_thoi"] == "Cát":
+            if filters["thien_thoi"] == "吉":
                 if "〇" not in data[p]['thien_thoi'] or "✕" in data[p]['thien_thoi']: continue
             # 5. Địa Lợi (地利)
-            if filters["dia_loi"] == "Cát":
+            if filters["dia_loi"] == "吉":
                 if hex_eval != "〇": continue
             # 6. Nhân Hòa (人和)
-            if filters["nhan_hoa"] == "Cát":
+            if filters["nhan_hoa"] == "吉":
                 if p in sat_list: continue
             
-            # Nếu thỏa mãn tất cả điều kiện
+            # Trình bày kết quả theo format lịch sự, chuyên nghiệp
             end_dt = curr_dt + timedelta(minutes=19, seconds=59)
-            time_str = f"🧭 **{palace_names[p]}** 👉 {curr_dt.strftime('%d/%m')} ({curr_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')})"
+            time_str = f"方向: {palace_names[p]} &nbsp;|&nbsp; 日期: {curr_dt.strftime('%d/%m')} &nbsp;|&nbsp; 时间: {curr_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')}"
             found_times.append(time_str)
             
             if len(found_times) >= 5: break 
@@ -508,18 +508,18 @@ st.components.v1.html(combined_html, height=520, scrolling=False)
 
 
 # --- ĐÃ CẬP NHẬT: GIAO DIỆN TÙY CHỌN TÌM KIẾM ---
-st.markdown("<hr style='margin: 10px 0;'><h4 style='text-align:center;'>🔍 Tùy Chọn Tìm Thời Điểm Đại Cát</h4>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 10px 0;'><h4 style='text-align:center;'>寻找近期最佳时机</h4>", unsafe_allow_html=True)
 st.markdown("<div style='max-width: 900px; margin: 0 auto;'>", unsafe_allow_html=True)
 
-# 7 nút chọn chia đều 1 hàng
+# 7 nút chọn chia đều 1 hàng, hoàn toàn bằng tiếng Trung
 f_col1, f_col2, f_col3, f_col4, f_col5, f_col6, f_col7 = st.columns(7)
-with f_col1: val_dir = st.selectbox("Hướng (方向)", ["Bỏ qua", "S (165 - 195)", "SW (195 - 255)", "W (255 - 285)", "NW (285 - 345)", "N (345 - 15)", "NE (15 - 75)", "E (75 - 135)", "SE (135 - 165)"])
-with f_col2: val_tcan = st.selectbox("Thiên Can (天盘干)", ["Bỏ qua"] + list("甲乙丙丁戊己庚辛壬癸"))
-with f_col3: val_dcan = st.selectbox("Địa Can (地盘干)", ["Bỏ qua"] + list("甲乙丙丁戊己庚辛壬癸"))
-with f_col4: val_mon = st.selectbox("Môn (门)", ["Bỏ qua", "休门", "生门", "伤门", "杜门", "景门", "死门", "惊门", "开门"])
-with f_col5: val_tt = st.selectbox("Thiên Thời (天时)", ["Không dùng", "Cát"])
-with f_col6: val_dl = st.selectbox("Địa Lợi (地利)", ["Không dùng", "Cát"])
-with f_col7: val_nh = st.selectbox("Nhân Hòa (人和)", ["Không dùng", "Cát"])
+with f_col1: val_dir = st.selectbox("方向", ["无", "S (165 - 195)", "SW (195 - 255)", "W (255 - 285)", "NW (285 - 345)", "N (345 - 15)", "NE (15 - 75)", "E (75 - 135)", "SE (135 - 165)"])
+with f_col2: val_tcan = st.selectbox("天盘干", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
+with f_col3: val_dcan = st.selectbox("地盘干", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
+with f_col4: val_mon = st.selectbox("门", ["无", "休门", "生门", "伤门", "杜门", "景门", "死门", "惊门", "开门"])
+with f_col5: val_tt = st.selectbox("天时", ["无", "吉"])
+with f_col6: val_dl = st.selectbox("地利", ["无", "吉"])
+with f_col7: val_nh = st.selectbox("人和", ["无", "吉"])
 
 # Gom dữ liệu filter
 filters = {
@@ -532,14 +532,14 @@ filters = {
     "nhan_hoa": val_nh
 }
 
-if st.button("🚀 Bắt Đầu Tìm Kiếm", use_container_width=True):
-    with st.spinner("Đang quét các mốc 20 phút tương lai..."):
+if st.button("开始寻找最佳时机", use_container_width=True):
+    with st.spinner("正在计算未来时间点..."):
         results = find_custom_good_times(user_dt, menh_cung, user_birth_star, filters)
     
     if results:
-        st.success(f"Đã tìm thấy {len(results)} thời điểm thỏa mãn các điều kiện:")
+        st.success(f"已找到 {len(results)} 个满足条件的时间点:")
         for res in results:
-            st.markdown(res)
+            st.markdown(f"- {res}")
     else:
-        st.warning("Không tìm thấy thời điểm nào thỏa mãn tất cả các điều kiện trong 30 ngày tới.")
+        st.warning("未来30天内未找到完全符合所有条件的选项，请放宽条件。")
 st.markdown("</div>", unsafe_allow_html=True)
