@@ -17,6 +17,9 @@ WOLONG_NUM_TO_STEM = {1: "癸", 2: "丁", 3: "丙", 4: "乙", 5: "戊", 6: "己"
 WOLONG_ORIGINAL_GATES = {1: "休门", 8: "生门", 3: "伤门", 4: "杜门", 9: "景门", 2: "死门", 7: "惊门", 6: "开门"}
 WOLONG_CLOCKWISE_GATES = ["景门", "死门", "惊门", "开门", "休门", "生门", "伤门", "杜门"]
 
+ORIGINAL_STARS = {1: "天蓬", 2: "天芮", 3: "天冲", 4: "天辅", 5: "天禽", 6: "天心", 7: "天柱", 8: "天任", 9: "天英"}
+DEITIES = ["值符", "螣蛇", "太阴", "六合", "勾陈", "朱雀", "九地", "九天"]
+
 solar_term_ju = {
     "冬至":[1,7,4], "小寒":[2,8,5], "大寒":[3,9,6], "立春":[8,5,2], "雨水":[9,6,3], "惊蛰":[1,7,4],
     "春分":[3,9,6], "清明":[4,1,7], "谷雨":[5,2,8], "立夏":[4,1,7], "小满":[5,2,8], "芒种":[6,3,9],
@@ -24,19 +27,6 @@ solar_term_ju = {
     "秋分":[7,1,4], "寒露":[6,9,3], "霜降":[5,8,2], "立冬":[6,9,3], "小雪":[5,8,2], "大雪":[4,7,1]
 }
 wolong_jq_order = ["大雪", "冬至", "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪"]
-
-THIEN_THOI_DICT = {
-    "甲": {"甲": "〇", "乙": "〇", "丙": "〇", "丁": "〇", "戊": "✕", "己": "✕", "庚": "✕", "辛": "✕", "壬": "✕", "癸": "〇"},
-    "乙": {"甲": "〇", "乙": "✕", "丙": "〇", "丁": "〇", "戊": "〇", "己": "〇", "庚": "✕", "辛": "✕", "壬": "✕", "癸": "✕"},
-    "丙": {"甲": "〇", "乙": "〇", "丙": "✕", "丁": "✕", "戊": "〇", "己": "✕", "庚": "✕", "辛": "〇", "壬": "✕", "癸": "〇"},
-    "丁": {"甲": "〇", "乙": "〇", "丙": "〇", "丁": "〇", "戊": "〇", "己": "✕", "庚": "〇", "辛": "〇", "壬": "〇", "癸": "✕"},
-    "戊": {"甲": "✕", "乙": "〇", "丙": "〇", "丁": "〇", "戊": "✕", "己": "〇", "庚": "✕", "辛": "✕", "壬": "〇", "癸": "〇"},
-    "己": {"甲": "〇", "乙": "〇", "丙": "〇", "丁": "✕", "戊": "✕", "己": "✕", "庚": "✕", "辛": "✕", "壬": "✕", "癸": "✕"},
-    "庚": {"甲": "✕", "乙": "✕", "丙": "✕", "丁": "〇", "戊": "✕", "己": "✕", "庚": "✕", "辛": "✕", "壬": "✕", "癸": "✕"},
-    "辛": {"甲": "✕", "乙": "✕", "丙": "〇", "丁": "✕", "戊": "✕", "己": "✕", "庚": "✕", "辛": "✕", "壬": "〇", "癸": "✕"},
-    "壬": {"甲": "✕", "乙": "〇", "丙": "〇", "丁": "〇", "戊": "〇", "己": "✕", "庚": "✕", "辛": "✕", "壬": "✕", "癸": "✕"},
-    "癸": {"甲": "〇", "乙": "✕", "丙": "✕", "丁": "✕", "戊": "✕", "己": "✕", "庚": "✕", "辛": "✕", "壬": "✕", "癸": "✕"}
-}
 
 GATE_TO_TRIGRAM = {"休门": "地", "生门": "雷", "伤门": "火", "杜门": "泽", "景门": "天", "死门": "风", "惊门": "水", "开门": "山"}
 TRIGRAM_BIN = {"地": [0,0,0], "山": [0,0,1], "水": [0,1,0], "风": [0,1,1], "雷": [1,0,0], "火": [1,0,1], "泽": [1,1,0], "天": [1,1,1]}
@@ -177,8 +167,8 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     can_gio, chi_gio = hoa_giap_gio[0], hoa_giap_gio[1]
     
     cung_data = {i: {
-        'dia': '', 'mon': '', 'thien': '', 'is_dia_bold': False, 'is_thien_bold': False, 
-        'hour_star': '', 'thien_thoi': ''
+        'dia': '', 'mon': '', 'thien': '', 'tinh': '', 'than': '', 
+        'is_dia_bold': False, 'is_thien_bold': False, 'hour_star': ''
     } for i in range(1, 10)}
     
     current_val = (10 - ju_num) if dun_type == "阳遁" else ju_num
@@ -195,9 +185,10 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
 
     luc_nghi_gio = get_xun_leader(can_gio, chi_gio)
     p_circle = [c for c, can in dia_ban.items() if can == luc_nghi_gio][0]
-    p_hour_stem = [c for c, can in dia_ban.items() if can == can_gio]
-    p_hour_stem = p_hour_stem[0] if p_hour_stem else 5
+    p_hour_stem_list = [c for c, can in dia_ban.items() if can == can_gio]
+    p_hour_stem = p_hour_stem_list[0] if p_hour_stem_list else 5
 
+    # 1. Thiên Bàn
     if p_circle == 5:
         for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i]
         if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio
@@ -207,13 +198,14 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         offset = (idx_target - idx_source) % 8
         for i in range(8):
             cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
-
     cung_data[5]['thien'] = "" 
 
+    # Đánh dấu Tuần thủ
     for i in range(1, 10):
         if cung_data[i]['thien'] == luc_nghi_gio: cung_data[i]['is_thien_bold'] = True
         if cung_data[i]['dia'] == luc_nghi_gio: cung_data[i]['is_dia_bold'] = True
 
+    # 2. Bát Môn
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
@@ -230,26 +222,33 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
             for i in range(8):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
 
+    # 3. Tính Cửu Tinh (Phi theo Lạc Thư - luôn luôn Phi Thuận)
+    luoshu_9 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    idx_base_star = luoshu_9.index(p_circle)
+    idx_target_star = luoshu_9.index(p_hour_stem)
+    shift_for_star = (idx_target_star - idx_base_star) % 9
+
+    for i in range(1, 10):
+        idx_orig = luoshu_9.index(i)
+        idx_new = (idx_orig + shift_for_star) % 9
+        cung_new = luoshu_9[idx_new]
+        cung_data[cung_new]['tinh'] = ORIGINAL_STARS[i]
+
+    # 4. Tính Bát Thần (Neo theo Địa chi Tuần thủ, Xoay Thuận vòng ngoài)
+    anchor_palace = 2 if p_hour_stem == 5 else p_hour_stem
+    idx_anchor = WOLONG_OUTER_PALACES.index(anchor_palace)
+    for i in range(8):
+        cung = WOLONG_OUTER_PALACES[(idx_anchor + i) % 8]
+        cung_data[cung]['than'] = DEITIES[i]
+    cung_data[5]['than'] = ""
+
+    # 5. Cửu Tinh Kì Môn (Hour Star của thuật toán gốc)
     center_hour_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
     curr_star = center_hour_star
     for cung in WOLONG_FLYING_PATH:
         cung_data[cung]['hour_star'] = curr_star
         curr_star += 1  
         if curr_star > 9: curr_star = 1
-
-    for i in WOLONG_OUTER_PALACES:
-        t_can = cung_data[i]['thien']
-        d_can = cung_data[i]['dia']
-        if not t_can or not d_can: continue
-        
-        if t_can == luc_nghi_gio and d_can == luc_nghi_gio:
-            cung_data[i]['thien_thoi'] = THIEN_THOI_DICT["甲"]["甲"]
-        elif t_can == luc_nghi_gio:
-            cung_data[i]['thien_thoi'] = THIEN_THOI_DICT[d_can]["甲"]
-        elif d_can == luc_nghi_gio:
-            cung_data[i]['thien_thoi'] = THIEN_THOI_DICT["甲"][t_can]
-        else:
-            cung_data[i]['thien_thoi'] = THIEN_THOI_DICT[d_can].get(t_can, "")
 
     slot = (user_dt.minute // 20) + 1
     if user_dt.hour % 2 == 0: slot += 3
@@ -258,106 +257,11 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
     return cung_data, p_circle, hao_dong
 
 # ==========================================
-# 4. HÀM KIỂM TRA QUẺ & TÌM GIỜ ĐẠI CÁT
-# ==========================================
-def evaluate_hexagram(cung_data, menh_cung, p_circle, hao_dong):
-    upper_gate = cung_data[menh_cung]['mon']
-    lower_gate = cung_data[p_circle]['mon']
-    upper_tri = GATE_TO_TRIGRAM.get(upper_gate, "天")
-    lower_tri = GATE_TO_TRIGRAM.get(lower_gate, "地")
-    
-    orig_lines = TRIGRAM_BIN[lower_tri] + TRIGRAM_BIN[upper_tri]
-    mut_lines = orig_lines.copy()
-    mut_lines[hao_dong - 1] = 1 - mut_lines[hao_dong - 1]
-    
-    mut_lower = BIN_TO_TRIGRAM[tuple(mut_lines[:3])]
-    mut_upper = BIN_TO_TRIGRAM[tuple(mut_lines[3:])]
-    
-    return EVAL_DICT.get(mut_upper, {}).get(mut_lower, "✕")
-
-# --- ĐÃ CẬP NHẬT: TÌM GIỜ TÙY CHỈNH THEO NHIỀU ĐIỀU KIỆN ---
-def find_custom_good_times(start_dt, menh_cung, user_birth_star, filters):
-    found_times = []
-    minute_rounded = (start_dt.minute // 20) * 20
-    curr_dt = start_dt.replace(minute=minute_rounded, second=0, microsecond=0)
-    
-    ops = {1:9, 9:1, 2:8, 8:2, 3:7, 7:3, 4:6, 6:4, 5:None}
-    pha_map = {"子":9, "丑":2, "寅":2, "卯":7, "辰":6, "巳":6, "午":1, "未":8, "申":8, "酉":3, "戌":4, "亥":4}
-    palace_names = {1:"N (345 - 15)", 8:"NE (15 - 75)", 3:"E (75 - 135)", 4:"SE (135 - 165)", 9:"S (165 - 195)", 2:"SW (195 - 255)", 7:"W (255 - 285)", 6:"NW (285 - 345)"}
-    dir_map = {"S (165 - 195)": 9, "SW (195 - 255)": 2, "W (255 - 285)": 7, "NW (285 - 345)": 6, "N (345 - 15)": 1, "NE (15 - 75)": 8, "E (75 - 135)": 3, "SE (135 - 165)": 4}
-    
-    for _ in range(2160): # Quét trong vòng 30 ngày tương lai
-        if len(found_times) >= 5:
-            break
-        
-        if curr_dt.hour >= 23: actual_date = curr_dt.date() + timedelta(days=1); chi_gio_idx = 0 
-        else: actual_date = curr_dt.date(); chi_gio_idx = (curr_dt.hour + 1) // 2 % 12
-        curr_chi = dia_chi[chi_gio_idx]
-        
-        day_o = sxtwl.fromSolar(actual_date.year, actual_date.month, actual_date.day)
-        wl_can, wl_chi, wl_jieqi, wl_yuan, wl_dun = get_wolong_calendar_data(day_o.getLunarMonth(), day_o.getLunarDay())
-        
-        curr_can = get_wushu_dun(wl_can, curr_chi)
-        curr_hoa_giap = curr_can + curr_chi
-        
-        curr_ju = calculate_correct_ju(wl_yuan, curr_can, curr_chi, wl_jieqi)
-            
-        data, p_circle, hao_dong = lap_que_wolong(wl_can, wl_chi, curr_hoa_giap, wl_dun, curr_ju, curr_dt)
-        
-        palaces_to_check = WOLONG_OUTER_PALACES
-        if filters["dir"] != "无":
-            palaces_to_check = [dir_map[filters["dir"]]]
-            
-        hex_eval = evaluate_hexagram(data, menh_cung, p_circle, hao_dong)
-        
-        p_5 = None
-        for i in range(1, 10):
-            if data[i]['hour_star'] == 5: p_5 = i; break
-        
-        sat_list = []
-        if p_5 and p_5 != 5: sat_list.extend([p_5, ops[p_5]]) 
-        
-        p_bm = None
-        for i in range(1, 10):
-            if data[i]['hour_star'] == user_birth_star: p_bm = i; break
-        if p_bm and p_bm != 5: sat_list.extend([p_bm, ops[p_bm]]) 
-            
-        sat_list.append(pha_map[curr_chi]) 
-        
-        for p in palaces_to_check:
-            # 1. Thiên Bàn Can (天盘干)
-            if filters["t_can"] != "无" and data[p]['thien'] != filters["t_can"]: continue
-            # 2. Địa Bàn Can (地盘干)
-            if filters["d_can"] != "无" and data[p]['dia'] != filters["d_can"]: continue
-            # 3. Môn (门)
-            if filters["mon"] != "无" and data[p]['mon'] != filters["mon"]: continue
-            # 4. Thiên Thời (天时)
-            if filters["thien_thoi"] == "吉":
-                if "〇" not in data[p]['thien_thoi'] or "✕" in data[p]['thien_thoi']: continue
-            # 5. Địa Lợi (地利)
-            if filters["dia_loi"] == "吉":
-                if hex_eval != "〇": continue
-            # 6. Nhân Hòa (人和)
-            if filters["nhan_hoa"] == "吉":
-                if p in sat_list: continue
-            
-            # Trình bày kết quả theo format lịch sự, chuyên nghiệp
-            end_dt = curr_dt + timedelta(minutes=19, seconds=59)
-            time_str = f"方向: {palace_names[p]} &nbsp;|&nbsp; 日期: {curr_dt.strftime('%d/%m')} &nbsp;|&nbsp; 时间: {curr_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')}"
-            found_times.append(time_str)
-            
-            if len(found_times) >= 5: break 
-        
-        curr_dt += timedelta(minutes=20)
-            
-    return found_times
-
-# ==========================================
-# 5. GIAO DIỆN HTML RENDER 
+# 4. GIAO DIỆN HTML RENDER 
 # ==========================================
 def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, user_birth_star):
-    upper_gate = cung_data[menh_cung]['mon']
-    lower_gate = cung_data[p_circle]['mon']
+    upper_gate = cung_data[menh_cung]['mon'] if cung_data[menh_cung]['mon'] else "休门"
+    lower_gate = cung_data[p_circle]['mon'] if cung_data[p_circle]['mon'] else "生门"
     upper_tri = GATE_TO_TRIGRAM.get(upper_gate, "天")
     lower_tri = GATE_TO_TRIGRAM.get(lower_gate, "地")
     
@@ -383,15 +287,13 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
     html = """
     <style>
         .qmdj-table { border-collapse: collapse; width: 100%; max-width: 480px; min-width: 320px; height: 360px; table-layout: fixed; font-size: 15px; background-color: #fefefe; margin: 0 auto; border: 1px solid #bfbfbf; }
-        .qmdj-td { border: 1px solid #bfbfbf; width: 33.33%; padding: 8px 4px 18px 4px; position: relative; vertical-align: top; overflow: visible; }
-        .row-top, .row-bot { display: flex; align-items: center; justify-content: flex-start; }
-        .item-left { width: 55px; text-align: left; margin-left: 2px; flex-shrink: 0; line-height: 1.2; font-weight: bold; color: #333; }
-        .item-right { display: flex; align-items: center; flex-wrap: wrap; flex-grow: 1; gap: 2px 3px; line-height: 1.2; margin-left: 10px; color: #b30000; font-size: 18px; }
-        .wolong-stem { display: inline-block; padding: 2px 4px; }
-        .wolong-spacing { margin-top: 15px; margin-bottom: 25px; }
-        .hour-star { position: absolute; top: 4px; right: 6px; color: #777; font-size: 13px; font-weight: bold; z-index: 10;}
+        .qmdj-td { border: 1px solid #bfbfbf; width: 33.33%; padding: 8px 6px 6px 6px; position: relative; vertical-align: top; overflow: visible; height: 120px; }
+        .content-wrapper { display: flex; justify-content: space-between; height: 100%; }
+        .left-col { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; font-size: 14px; font-weight: bold; color: #333; height: 75%; }
+        .right-col { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; font-size: 18px; color: #b30000; height: 100%; padding-right: 2px; }
+        .wolong-stem { display: inline-block; padding: 2px; }
+        .hour-star { position: absolute; bottom: 4px; left: 6px; color: #777; font-size: 13px; font-weight: bold; z-index: 10; }
         .star-highlight { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 2px dashed #0000FF; border-radius: 50%; color: #0000FF; }
-        .thien-thoi-mark { position: absolute; bottom: 4px; right: 6px; color: #1a1a1a; font-size: 13px; font-weight: bold;}
     </style>
     <table class="qmdj-table">
     """
@@ -414,31 +316,32 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
             is_match = (d['hour_star'] == user_birth_star)
             h_star_val = d['hour_star']
             hour_star_html = f"<div class='hour-star'><span class='star-highlight'>{h_star_val}</span></div>" if is_match else f"<div class='hour-star'>{h_star_val}</div>"
-                
-            thien_thoi_html = f"<div class='thien-thoi-mark'>{d['thien_thoi']}</div>" if p != 5 else ""
 
             if p == 5:
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
                     {hour_star_html} 
+                    <div style="position: absolute; top: 6px; left: 6px; font-size: 14px; font-weight: bold; color: #333;">{d['tinh']}</div>
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
-                    <div style="position: absolute; bottom: 6px; right: 6px; font-size: 16px; font-weight: {dia_weight}; color: #b30000;">{d['dia']}</div>
+                    <div style="position: absolute; bottom: 6px; right: 6px; font-size: 18px; font-weight: {dia_weight}; color: #b30000;">{d['dia']}</div>
                 </td>"""
             else:
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color};">
+                    <div class="content-wrapper">
+                        <div class="left-col">
+                            <div>{d['than']}</div>
+                            <div>{d['tinh']}</div>
+                            <div>{d['mon']}</div>
+                        </div>
+                        <div class="right-col">
+                            <div class="wolong-stem">{thien_html}</div>
+                            <div class="wolong-stem">{dia_html}</div>
+                        </div>
+                    </div>
                     {hour_star_html}
-                    {thien_thoi_html}
-                    <div class="row-top wolong-spacing">
-                        <div class="item-left"></div>
-                        <div class="item-right"><span class="wolong-stem">{thien_html}</span></div>
-                    </div>
-                    <div class="row-bot">
-                        <div class="item-left">{d['mon']}</div>
-                        <div class="item-right"><span class="wolong-stem">{dia_html}</span></div>
-                    </div>
                 </td>"""
         html += "</tr>"
         
@@ -446,7 +349,7 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
     return html
 
 # ==========================================
-# 6. STREAMLIT APP MAIN
+# 5. STREAMLIT APP MAIN
 # ==========================================
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
@@ -505,41 +408,3 @@ combined_html = f"""
     </div>
 """
 st.components.v1.html(combined_html, height=520, scrolling=False)
-
-
-# --- ĐÃ CẬP NHẬT: GIAO DIỆN TÙY CHỌN TÌM KIẾM ---
-st.markdown("<hr style='margin: 10px 0;'><h4 style='text-align:center;'>寻找近期最佳时机</h4>", unsafe_allow_html=True)
-st.markdown("<div style='max-width: 900px; margin: 0 auto;'>", unsafe_allow_html=True)
-
-# 7 nút chọn chia đều 1 hàng, hoàn toàn bằng tiếng Trung
-f_col1, f_col2, f_col3, f_col4, f_col5, f_col6, f_col7 = st.columns(7)
-with f_col1: val_dir = st.selectbox("Hướng", ["无", "S (165 - 195)", "SW (195 - 255)", "W (255 - 285)", "NW (285 - 345)", "N (345 - 15)", "NE (15 - 75)", "E (75 - 135)", "SE (135 - 165)"])
-with f_col2: val_tcan = st.selectbox("Thiên Bàn", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
-with f_col3: val_dcan = st.selectbox("Địa Bàn", ["无"] + list("甲乙丙丁戊己庚辛壬癸"))
-with f_col4: val_mon = st.selectbox("Môn", ["无", "休门", "生门", "伤门", "杜门", "景门", "死门", "惊门", "开门"])
-with f_col5: val_tt = st.selectbox("Thiên Thời", ["无", "吉"])
-with f_col6: val_dl = st.selectbox("Địa Lợi", ["无", "吉"])
-with f_col7: val_nh = st.selectbox("Nhân Hòa", ["无", "吉"])
-
-# Gom dữ liệu filter
-filters = {
-    "dir": val_dir,
-    "t_can": val_tcan,
-    "d_can": val_dcan,
-    "mon": val_mon,
-    "thien_thoi": val_tt,
-    "dia_loi": val_dl,
-    "nhan_hoa": val_nh
-}
-
-if st.button("寻找最佳时机", use_container_width=True):
-    with st.spinner("正在计算未来时间点..."):
-        results = find_custom_good_times(user_dt, menh_cung, user_birth_star, filters)
-    
-    if results:
-        st.success(f"已找到 {len(results)} 个满足条件的时间点:")
-        for res in results:
-            st.markdown(f"- {res}")
-    else:
-        st.warning("未来30天内未找到完全符合所有条件的选项，请放宽条件。")
-st.markdown("</div>", unsafe_allow_html=True)
