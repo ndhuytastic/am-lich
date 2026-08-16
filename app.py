@@ -450,7 +450,7 @@ cuc_so_list = [f"阳遁{i}局" for i in range(1, 10)] + [f"阴遁{i}局" for i i
 
 st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
 # Tạo 4 cột: [Cột trống (3 phần), Nút 1 (2 phần), Nút 2 (2 phần), Cột trống (3 phần)]
-_, col_opt1, col_opt2, _ = st.columns([3, 2.5, 2.5, 3])
+_, col_opt1, col_opt2, _ = st.columns([3, 1.5, 1.5, 3])
 with col_opt1: 
     manual_hoagiap = st.selectbox("Hoa Giáp", options=["不"] + hoa_giap_60)
 with col_opt2: 
