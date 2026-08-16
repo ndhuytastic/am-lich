@@ -137,7 +137,6 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
 
     luc_nghi_gio = get_xun_leader(can_gio, chi_gio)
     
-    # ĐÃ SỬA LỖI QUÉT GIỜ GIÁP:
     p_circle_list = [c for c, can in dia_ban.items() if can == luc_nghi_gio] 
     p_circle = p_circle_list[0] if p_circle_list else 5
 
@@ -145,7 +144,7 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
     p_hour_stem_list = [c for c, can in dia_ban.items() if can == target_stem]
     p_hour_stem = p_hour_stem_list[0] if p_hour_stem_list else 5
 
-    # 2. THIÊN BÀN CAN (Phi Thuận)
+    # 2. THIÊN BÀN CAN
     if p_circle == 5:
         for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i]
         if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio
@@ -183,25 +182,29 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
         cung_data[luoshu_9[idx_new]]['sao'] = ORIGINAL_STARS[i]
     cung_data[5]['sao'] = "" 
 
-    # 5. BÁT THẦN (Chuẩn 100% Hojo Ikkou)
-    # "Đặt Trực Phù vào vị trí của THIÊN BÀN GIÁP"
-    # Trên code, vị trí Thiên bàn Giáp chính là p_hour_stem
+    # 5. BÁT THẦN
     anchor_palace = p_hour_stem
-    
-    # Ngoại lệ nếu Thiên bàn Giáp nằm ở Trung Cung
     if anchor_palace == 5:
-        # Dương độn gán định vị giả định vào 8 (Cấn), Âm độn gán vào 7 (Đoài)
         anchor_palace = 8 if dun_type == "阳遁" else 7
         
     idx_anchor = WOLONG_OUTER_PALACES.index(anchor_palace)
     for i in range(8):
         if dun_type == "阳遁":
-            # Dương độn: Phân bố thuận chiều kim đồng hồ (+ i)
             cung_data[WOLONG_OUTER_PALACES[(idx_anchor + i) % 8]]['than'] = DEITIES[i]
         else:
-            # Âm độn: Phân bố ngược chiều kim đồng hồ (- i)
             cung_data[WOLONG_OUTER_PALACES[(idx_anchor - i) % 8]]['than'] = DEITIES[i]
     cung_data[5]['than'] = ""
+
+    # HOUR STAR
+    curr_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
+    for cung in WOLONG_FLYING_PATH:
+        cung_data[cung]['hour_star'] = curr_star
+        curr_star = 1 if curr_star == 9 else curr_star + 1
+
+    slot = (user_dt.minute // 20) + 1
+    if user_dt.hour % 2 == 0: slot += 3
+    
+    return cung_data, p_circle, slot
 
 # ==========================================
 # 4. MODULE PHÂN TÍCH CÁCH CỤC
