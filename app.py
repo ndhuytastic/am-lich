@@ -4,10 +4,10 @@ from datetime import datetime, timedelta, timezone, date
 import warnings
 
 warnings.filterwarnings('ignore')
-st.set_page_config(page_title="Kỳ Môn Hojo Ikkou", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Ngọa Long Kỳ Môn", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN (HỒNG PHÁI)
+# 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN
 # ==========================================
 thien_can = "甲乙丙丁戊己庚辛壬癸"
 dia_chi = "子丑寅卯辰巳午未申酉戌亥"
@@ -118,7 +118,7 @@ def calc_menh_cung(b_lunar_y, b_lunar_m):
             return mc, False 
 
 # ==========================================
-# 3. LẬP BÀN TOÁN HỌC (THẤU PHÁI / HOJO IKKOU)
+# 3. LẬP BÀN TOÁN HỌC
 # ==========================================
 def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
     cung_data = {i: {'dia': '', 'mon': '', 'thien': '', 'sao': '', 'than': '', 'hour_star': ''} for i in range(1, 10)}
@@ -183,28 +183,28 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
         cung_data[luoshu_9[idx_new]]['sao'] = ORIGINAL_STARS[i]
     cung_data[5]['sao'] = "" 
 
-    # 5. BÁT THẦN 
-    anchor_palace = p_circle
-    if p_circle == 5:
-        anchor_palace = 2 if dun_type == "阳遁" else 8
+    # 5. BÁT THẦN (Chuẩn 100% Hojo Ikkou)
+    # "Đặt Trực Phù vào vị trí của THIÊN BÀN GIÁP"
+    # Trên code, vị trí Thiên bàn Giáp chính là p_hour_stem
+    anchor_palace = p_hour_stem
+    
+    # Ngoại lệ nếu Thiên bàn Giáp nằm ở Trung Cung
+    if anchor_palace == 5:
+        # Dương độn gán định vị giả định vào 8 (Cấn), Âm độn gán vào 7 (Đoài)
+        anchor_palace = 8 if dun_type == "阳遁" else 7
+        
     idx_anchor = WOLONG_OUTER_PALACES.index(anchor_palace)
     for i in range(8):
-        cung_data[WOLONG_OUTER_PALACES[(idx_anchor + i) % 8]]['than'] = DEITIES[i]
+        if dun_type == "阳遁":
+            # Dương độn: Phân bố thuận chiều kim đồng hồ (+ i)
+            cung_data[WOLONG_OUTER_PALACES[(idx_anchor + i) % 8]]['than'] = DEITIES[i]
+        else:
+            # Âm độn: Phân bố ngược chiều kim đồng hồ (- i)
+            cung_data[WOLONG_OUTER_PALACES[(idx_anchor - i) % 8]]['than'] = DEITIES[i]
     cung_data[5]['than'] = ""
 
-    # HOUR STAR
-    curr_star = get_hour_nine_star(chi_ngay, chi_gio, dun_type)
-    for cung in WOLONG_FLYING_PATH:
-        cung_data[cung]['hour_star'] = curr_star
-        curr_star = 1 if curr_star == 9 else curr_star + 1
-
-    slot = (user_dt.minute // 20) + 1
-    if user_dt.hour % 2 == 0: slot += 3
-    
-    return cung_data, p_circle, slot
-
 # ==========================================
-# 4. MODULE PHÂN TÍCH CÁCH CỤC (Hojo Ikkou)
+# 4. MODULE PHÂN TÍCH CÁCH CỤC
 # ==========================================
 def qimen_analyzer_hojo(cung_data, can_tuan, truc_su_door):
     FORMATION_RANKS = {
@@ -441,6 +441,18 @@ with col4: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_
 with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
 with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
 
+# --- CODE THÊM GIAO DIỆN TÙY CHỌN LẬP BÀN NHANH ---
+hoa_giap_60 = [thien_can[i%10] + dia_chi[i%12] for i in range(60)]
+cuc_so_list = [f"阳遁{i}局" for i in range(1, 10)] + [f"阴遁{i}局" for i in range(1, 10)]
+
+st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+col_opt1, col_opt2, _ = st.columns([2, 2, 6])
+with col_opt1: 
+    manual_hoagiap = st.selectbox("Hoa Giáp", options=["不"] + hoa_giap_60)
+with col_opt2: 
+    manual_cucso = st.selectbox("Cục Số", options=["不"] + cuc_so_list)
+# --------------------------------------------------
+
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
 chi_gio_idx = 0 if user_dt.hour >= 23 else (user_dt.hour + 1) // 2 % 12
@@ -455,6 +467,17 @@ can_gio = get_wushu_dun(wl_can, chi_gio)
 hoa_giap_hien_tai = can_gio + chi_gio
 
 wl_ju = calculate_correct_ju(wl_yuan, can_gio, chi_gio, wl_jieqi)
+
+# --- CODE GHI ĐÈ LOGIC NẾU NGƯỜI DÙNG CHỌN NÚT ---
+if manual_hoagiap != "不":
+    can_gio = manual_hoagiap[0]
+    chi_gio = manual_hoagiap[1]
+    hoa_giap_hien_tai = manual_hoagiap
+
+if manual_cucso != "不":
+    wl_dun = "阳遁" if "阳" in manual_cucso else "阴遁"
+    wl_ju = int(manual_cucso.replace("阳遁", "").replace("阴遁", "").replace("局", ""))
+# ------------------------------------------------
 
 # Tính Mệnh Cung
 b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
