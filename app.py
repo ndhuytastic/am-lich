@@ -406,6 +406,8 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, c
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
+                    <!-- Đã bổ sung dòng dưới đây để in Thiên Bàn Can ở Trung Cung -->
+                    <div style="position: absolute; bottom: 30px; right: 6px; {t_style}">{t_can}</div>
                     <div style="position: absolute; bottom: 6px; right: 6px; {d_style}">{d_can}</div>
                 </td>"""
             else:
