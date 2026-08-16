@@ -396,11 +396,13 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, c
                     <div style="position: absolute; bottom: 6px; right: 6px; {d_style}">{d_can}</div>
                 </td>"""
             else:
-                # Tổ hợp 3 Cát Hung (Dòng 1 in đậm)
+                # Tổ hợp 3 Cát Hung (Dòng 1: Cát Đỏ, Hung Đen)
                 combos_html = ""
                 for i, c in enumerate(cung_3_elements[p]):
                     if i == 0:
-                        combos_html += f"<div style='font-weight: 800; color: #b30000; margin-bottom: 2px;'>{c}</div>"
+                        # Nếu chứa chữ "凶" (bao gồm 凶 và 大凶) thì in Đen đậm, còn lại (吉) in Đỏ đậm
+                        color = "#000000" if "凶" in c else "#CC0000"
+                        combos_html += f"<div style='font-weight: 900; color: {color}; margin-bottom: 2px;'>{c}</div>"
                     else:
                         combos_html += f"<div style='font-weight: 500; color: #666; margin-bottom: 2px;'>{c}</div>"
                         
