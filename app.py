@@ -450,11 +450,11 @@ cuc_so_list = [f"阳遁{i}局" for i in range(1, 10)] + [f"阴遁{i}局" for i i
 
 st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
 # Tạo 4 cột: [Cột trống (3 phần), Nút 1 (2 phần), Nút 2 (2 phần), Cột trống (3 phần)]
-_, col_opt1, col_opt2, _ = st.columns([3, 1.5, 1.5, 3])
+_, col_opt1, col_opt2, _ = st.columns([3, 1.2, 1.2, 3])
 with col_opt1: 
-    manual_hoagiap = st.selectbox("Hoa Giáp", options=["不"] + hoa_giap_60)
+    manual_hoagiap = st.selectbox("干支", options=["Tùy Chọn"] + hoa_giap_60)
 with col_opt2: 
-    manual_cucso = st.selectbox("Cục Số", options=["不"] + cuc_so_list)
+    manual_cucso = st.selectbox("局", options=["Tùy Chọn"] + cuc_so_list)
 # --------------------------------------------------a
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
@@ -473,12 +473,12 @@ hoa_giap_hien_tai = can_gio + chi_gio
 wl_ju = calculate_correct_ju(wl_yuan, can_gio, chi_gio, wl_jieqi)
 
 # --- CODE GHI ĐÈ LOGIC NẾU NGƯỜI DÙNG CHỌN NÚT ---
-if manual_hoagiap != "不":
+if manual_hoagiap != "Tùy Chọn":
     can_gio = manual_hoagiap[0]
     chi_gio = manual_hoagiap[1]
     hoa_giap_hien_tai = manual_hoagiap
 
-if manual_cucso != "不":
+if manual_cucso != "Tùy Chọn":
     wl_dun = "阳遁" if "阳" in manual_cucso else "阴遁"
     wl_ju = int(manual_cucso.replace("阳遁", "").replace("阴遁", "").replace("局", ""))
 # ------------------------------------------------
