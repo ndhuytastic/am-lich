@@ -146,16 +146,26 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
 
     # 2. THIÊN BÀN CAN
     if p_circle == 5:
+        # Trường hợp 1: Giáp (Lục nghi) ở Trung Cung
         for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i]
         if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio
+        cung_data[5]['thien'] = "" # Giáp bay ra ngoài, Trung cung để trống
     else:
-        idx_source = WOLONG_OUTER_PALACES.index(p_circle)
-        idx_target = WOLONG_OUTER_PALACES.index(p_hour_stem) if p_hour_stem != 5 else idx_source
-        offset = (idx_target - idx_source) % 8
-        for i in range(8):
-            cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
-    cung_data[5]['thien'] = dia_ban[5] if p_hour_stem == 5 else ""
-
+        # Giáp ở vòng ngoài
+        if p_hour_stem == 5:
+            # Trường hợp 2: Can giờ ở Trung Cung -> THỰC HIỆN HOÁN ĐỔI
+            for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i] # 7 cung vòng ngoài phục ngâm
+            cung_data[p_circle]['thien'] = can_gio # Hoán đổi 1: Can giờ bay ra đè lên cung chứa Giáp
+            cung_data[5]['thien'] = luc_nghi_gio   # Hoán đổi 2: Lục nghi (Giáp) bay vào Trung cung (để in đậm màu đỏ)
+        else:
+            # Trường hợp Bình thường: Cả Giáp và Can giờ đều bay ở vòng ngoài
+            idx_source = WOLONG_OUTER_PALACES.index(p_circle)
+            idx_target = WOLONG_OUTER_PALACES.index(p_hour_stem)
+            offset = (idx_target - idx_source) % 8
+            for i in range(8):
+                cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
+            cung_data[5]['thien'] = "" # Bình thường thì Trung cung để trống
+            
     # 3. BÁT MÔN 
     if p_circle == 5:
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
