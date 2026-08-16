@@ -11,6 +11,7 @@ thien_can = "甲乙丙丁戊己庚辛壬癸"
 dia_chi = "子丑寅卯辰巳午未申酉戌亥"
 luc_nghi = ["戊", "己", "庚", "辛", "壬", "癸", "丁", "丙", "乙"]
 
+# Vòng 8 cung bên ngoài (sắp xếp theo chiều kim đồng hồ: Tốn, Ly, Khôn, Đoài, Càn, Khảm, Cấn, Chấn)
 WOLONG_OUTER_PALACES = [4, 9, 2, 7, 6, 1, 8, 3]
 WOLONG_FLYING_PATH = [5, 6, 7, 8, 9, 1, 2, 3, 4]
 WOLONG_NUM_TO_STEM = {1: "癸", 2: "丁", 3: "丙", 4: "乙", 5: "戊", 6: "己", 7: "庚", 8: "辛", 9: "壬", 0: "甲"}
@@ -18,6 +19,7 @@ WOLONG_ORIGINAL_GATES = {1: "休门", 8: "生门", 3: "伤门", 4: "杜门", 9: 
 WOLONG_CLOCKWISE_GATES = ["景门", "死门", "惊门", "开门", "休门", "生门", "伤门", "杜门"]
 
 ORIGINAL_STARS = {1: "天蓬", 2: "天芮", 3: "天冲", 4: "天辅", 5: "天禽", 6: "天心", 7: "天柱", 8: "天任", 9: "天英"}
+# Bát Thần Thấu Phái (Dùng Câu Trần, Chu Tước)
 DEITIES = ["值符", "螣蛇", "太阴", "六合", "勾陈", "朱雀", "九地", "九天"]
 
 solar_term_ju = {
@@ -233,9 +235,16 @@ def lap_que_wolong(can_ngay, chi_ngay, hoa_giap_gio, dun_type, ju_num, user_dt):
         idx_new = (idx_orig + shift_for_star) % 9
         cung_new = luoshu_9[idx_new]
         cung_data[cung_new]['tinh'] = ORIGINAL_STARS[i]
+        
+    # KHÔNG hiển thị sao ở Trung Cung (Cung 5)
+    cung_data[5]['tinh'] = ""
 
-    # 4. Tính Bát Thần (Neo theo Địa chi Tuần thủ, Xoay Thuận vòng ngoài)
-    anchor_palace = 2 if p_hour_stem == 5 else p_hour_stem
+    # 4. Tính Bát Thần (Neo theo Địa Bàn Tuần Thủ + Ký Cung, Xoay Thuận vòng ngoài)
+    if p_circle == 5:
+        anchor_palace = 2 if dun_type == "阳遁" else 8
+    else:
+        anchor_palace = p_circle
+        
     idx_anchor = WOLONG_OUTER_PALACES.index(anchor_palace)
     for i in range(8):
         cung = WOLONG_OUTER_PALACES[(idx_anchor + i) % 8]
@@ -321,7 +330,6 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, u
                 html += f"""
                 <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
                     {hour_star_html} 
-                    <div style="position: absolute; top: 6px; left: 6px; font-size: 14px; font-weight: bold; color: #333;">{d['tinh']}</div>
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
                         {hex_html}
                     </div>
