@@ -401,8 +401,8 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, c
             
             # Chữ bình thường: Giữ nguyên gốc (độ dày 500, màu đỏ nhạt #a36666, cỡ 16px)
             # Chữ chứa Giáp: Giữ nguyên cỡ 16px, in đậm (bold), màu đỏ tươi (#FF0000)
-            t_style = "font-weight: bold; color: #FF0000; font-size: 16px;" if t_can == can_tuan else "font-weight: 500; color: #a36666; font-size: 16px;"
-            d_style = "font-weight: bold; color: #FF0000; font-size: 16px;" if d_can == can_tuan else "font-weight: 500; color: #a36666; font-size: 16px;"
+            t_style = "font-weight: bold; color: #CC0000; font-size: 16px;" if t_can == can_tuan else "font-weight: 500; color: #a36666; font-size: 16px;"
+            d_style = "font-weight: bold; color: #CC0000; font-size: 16px;" if d_can == can_tuan else "font-weight: 500; color: #a36666; font-size: 16px;"
 
             if p == 5:
                 html += f"""
