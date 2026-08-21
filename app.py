@@ -4,10 +4,10 @@ from datetime import datetime, timedelta, timezone, date
 import warnings
 
 warnings.filterwarnings('ignore')
-st.set_page_config(page_title="Ngọa Long Kỳ Môn", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Kỳ Môn Hojo Ikkou", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN
+# 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN (HỒNG PHÁI)
 # ==========================================
 thien_can = "甲乙丙丁戊己庚辛壬癸"
 dia_chi = "子丑寅卯辰巳午未申酉戌亥"
@@ -30,8 +30,10 @@ solar_term_ju = {
 }
 wolong_jq_order = ["大雪", "冬至", "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪"]
 
-# TỪ ĐIỂN QUẺ DỊCH 
+# TỪ ĐIỂN QUẺ DỊCH (Đã cập nhật Tên rút gọn)
 GATE_TO_TRIGRAM = {"休门": "地", "生门": "雷", "伤门": "火", "杜门": "泽", "景门": "天", "死门": "风", "惊门": "水", "开门": "山"}
+TIEN_THIEN_MAP = {9: "天", 1: "地", 3: "火", 7: "水", 6: "山", 2: "风", 8: "雷", 4: "泽"}
+
 TRIGRAM_BIN = {"地": [0,0,0], "山": [0,0,1], "水": [0,1,0], "风": [0,1,1], "雷": [1,0,0], "火": [1,0,1], "泽": [1,1,0], "天": [1,1,1]}
 BIN_TO_TRIGRAM = {tuple(v): k for k, v in TRIGRAM_BIN.items()}
 TRIGRAM_UNICODE = {"天": "☰", "泽": "☱", "火": "☲", "雷": "☳", "风": "☴", "水": "☵", "山": "☶", "地": "☷"}
@@ -48,26 +50,26 @@ EVAL_DICT = {
 }
 
 HEX_NAME_DICT = {
-    ("天","天"): (1,"Bát Thuần Càn"), ("地","地"): (2,"Bát Thuần Khôn"), ("水","雷"): (3,"Thủy Lôi Truân"), ("山","水"): (4,"Sơn Thủy Mông"),
-    ("水","天"): (5,"Thủy Thiên Nhu"), ("天","水"): (6,"Thiên Thủy Tụng"), ("地","水"): (7,"Địa Thủy Sư"), ("水","地"): (8,"Thủy Địa Tỷ"),
-    ("风","天"): (9,"Phong Thiên T.Súc"), ("天","泽"): (10,"Thiên Trạch Lý"), ("地","天"): (11,"Địa Thiên Thái"), ("天","地"): (12,"Thiên Địa Bĩ"),
-    ("天","火"): (13,"T.Hỏa Đồng Nhân"), ("火","天"): (14,"Hỏa Thiên Đ.Hữu"), ("地","山"): (15,"Địa Sơn Khiêm"), ("雷","地"): (16,"Lôi Địa Dự"),
-    ("泽","雷"): (17,"Trạch Lôi Tùy"), ("山","风"): (18,"Sơn Phong Cổ"), ("地","泽"): (19,"Địa Trạch Lâm"), ("风","地"): (20,"Phong Địa Quan"),
-    ("火","雷"): (21,"Hỏa Lôi Phệ Hạp"), ("山","火"): (22,"Sơn Hỏa Bí"), ("山","地"): (23,"Sơn Địa Bác"), ("地","雷"): (24,"Địa Lôi Phục"),
-    ("天","雷"): (25,"T.Lôi Vô Vọng"), ("山","天"): (26,"Sơn Thiên Đ.Súc"), ("山","雷"): (27,"Sơn Lôi Di"), ("泽","风"): (28,"Trạch Phong Đ.Quá"),
-    ("水","水"): (29,"Bát Thuần Khảm"), ("火","火"): (30,"Bát Thuần Ly"), ("泽","山"): (31,"Trạch Sơn Hàm"), ("雷","风"): (32,"Lôi Phong Hằng"),
-    ("天","山"): (33,"Thiên Sơn Độn"), ("雷","天"): (34,"Lôi Thiên Đ.Tráng"), ("火","地"): (35,"Hỏa Địa Tấn"), ("地","火"): (36,"Địa Hỏa Minh Di"),
-    ("风","火"): (37,"Phong Hỏa G.Nhân"), ("火","泽"): (38,"Hỏa Trạch Khuê"), ("水","山"): (39,"Thủy Sơn Kiển"), ("雷","水"): (40,"Lôi Thủy Giải"),
-    ("山","泽"): (41,"Sơn Trạch Tổn"), ("风","雷"): (42,"Phong Lôi Ích"), ("泽","天"): (43,"Trạch Thiên Quải"), ("天","风"): (44,"Thiên Phong Cấu"),
-    ("泽","地"): (45,"Trạch Địa Tụy"), ("地","风"): (46,"Địa Phong Thăng"), ("泽","水"): (47,"Trạch Thủy Khốn"), ("水","风"): (48,"Thủy Phong Tỉnh"),
-    ("泽","火"): (49,"Trạch Hỏa Cách"), ("火","风"): (50,"Hỏa Phong Đỉnh"), ("雷","雷"): (51,"Bát Thuần Chấn"), ("山","山"): (52,"Bát Thuần Cấn"),
-    ("风","山"): (53,"Phong Sơn Tiệm"), ("雷","泽"): (54,"Lôi Trạch Q.Muội"), ("雷","火"): (55,"Lôi Hỏa Phong"), ("火","山"): (56,"Hỏa Sơn Lữ"),
-    ("风","风"): (57,"Bát Thuần Tốn"), ("泽","泽"): (58,"Bát Thuần Đoài"), ("风","水"): (59,"Phong Thủy Hoán"), ("水","泽"): (60,"Thủy Trạch Tiết"),
-    ("风","泽"): (61,"P.Trạch T.Phu"), ("雷","山"): (62,"Lôi Sơn Tiểu Quá"), ("水","火"): (63,"Thủy Hỏa Ký Tế"), ("火","水"): (64,"Hỏa Thủy Vị Tế")
+    ("天","天"): "Càn", ("地","地"): "Khôn", ("水","雷"): "Truân", ("山","水"): "Mông",
+    ("水","天"): "Nhu", ("天","水"): "Tụng", ("地","水"): "Sư", ("水","地"): "Tỷ",
+    ("风","天"): "Tiểu Súc", ("天","泽"): "Lý", ("地","天"): "Thái", ("天","地"): "Bĩ",
+    ("天","火"): "Đồng Nhân", ("火","天"): "Đại Hữu", ("地","山"): "Khiêm", ("雷","地"): "Dự",
+    ("泽","雷"): "Tùy", ("山","风"): "Cổ", ("地","泽"): "Lâm", ("风","地"): "Quan",
+    ("火","雷"): "Phệ Hạp", ("山","火"): "Bí", ("山","地"): "Bác", ("地","雷"): "Phục",
+    ("天","雷"): "Vô Vọng", ("山","天"): "Đại Súc", ("山","雷"): "Di", ("泽","风"): "Đại Quá",
+    ("水","水"): "Khảm", ("火","火"): "Ly", ("泽","山"): "Hàm", ("雷","风"): "Hằng",
+    ("天","山"): "Độn", ("雷","天"): "Đại Tráng", ("火","地"): "Tấn", ("地","火"): "Minh Di",
+    ("风","火"): "Gia Nhân", ("火","泽"): "Khuê", ("水","山"): "Kiển", ("雷","水"): "Giải",
+    ("山","泽"): "Tổn", ("风","雷"): "Ích", ("泽","天"): "Quải", ("天","风"): "Cấu",
+    ("泽","地"): "Tụy", ("地","风"): "Thăng", ("泽","水"): "Khốn", ("水","风"): "Tỉnh",
+    ("泽","火"): "Cách", ("火","风"): "Đỉnh", ("雷","雷"): "Chấn", ("山","山"): "Cấn",
+    ("风","山"): "Tiệm", ("雷","泽"): "Quy Muội", ("雷","火"): "Phong", ("火","山"): "Lữ",
+    ("风","风"): "Tốn", ("泽","泽"): "Đoài", ("风","水"): "Hoán", ("水","泽"): "Tiết",
+    ("风","泽"): "Trung Phu", ("雷","山"): "Tiểu Quá", ("水","火"): "Ký Tế", ("火","水"): "Vị Tế"
 }
 
 # ==========================================
-# 2. LOGIC LỊCH & QUẺ CHÂN TRUYỀN
+# 2. LOGIC LỊCH
 # ==========================================
 def calculate_correct_ju(nguyen, can_gio, chi_gio, tiet_khi):
     base_ju_dict = {"夏至":9,"小暑":7,"大暑":6,"立秋":5,"处暑":6,"白露":5,"秋分":4,"寒露":9,"霜降":8,"立冬":7,"小雪":2,"大雪":1,"冬至":1,"小寒":3,"大寒":4,"立春":5,"雨水":4,"惊蛰":5,"春分":6,"清明":1,"谷雨":2,"立夏":3,"小满":8,"芒种":9}
@@ -99,28 +101,11 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
     res = (start_star + hb_idx) % 9 if dun_type == "阳遁" else (start_star - hb_idx) % 9
     return 9 if res == 0 else res
 
-def calc_menh_cung(b_lunar_y, b_lunar_m):
-    star_y = 11 - (sum(int(d) for d in str(b_lunar_y)) % 9 or 9)
-    if star_y <= 0: star_y += 9
-    b_y_branch = dia_chi[(b_lunar_y - 4) % 12]
-    start_m = 8 if b_y_branch in ["子","午","卯","酉"] else (5 if b_y_branch in ["辰","戌","丑","未"] else 2)
-    star_m = (start_m - (b_lunar_m - 1)) % 9 or 9
-    yin_path = [5, 6, 7, 8, 9, 1, 2, 3, 4]
-    for i in range(9):
-        val = (star_y - i) % 9 or 9
-        if val == star_m:
-            mc = yin_path[i]
-            if mc == 5:
-                if b_lunar_m in [1, 2, 3]: return 6, True
-                elif b_lunar_m in [4, 5, 6]: return 4, True
-                elif b_lunar_m in [7, 8, 9]: return 8, True
-                else: return 2, True
-            return mc, False 
 
 # ==========================================
-# 3. LẬP BÀN TOÁN HỌC
+# 3. LẬP BÀN TOÁN HỌC (THẤU PHÁI / HOJO IKKOU)
 # ==========================================
-def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
+def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay):
     cung_data = {i: {'dia': '', 'mon': '', 'thien': '', 'sao': '', 'than': '', 'hour_star': ''} for i in range(1, 10)}
     
     # 1. ĐỊA BÀN
@@ -144,45 +129,50 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
     p_hour_stem_list = [c for c, can in dia_ban.items() if can == target_stem]
     p_hour_stem = p_hour_stem_list[0] if p_hour_stem_list else 5
 
-    # 2. THIÊN BÀN CAN
+    # 2. THIÊN BÀN CAN (Chuẩn 100% theo mô tả sách Hojo Ikkou trang 98)
     if p_circle == 5:
         # Trường hợp Đặc Biệt 1: Giáp (Lục Nghi) nằm ở Trung Cung
-        for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i] # 8 cung vòng ngoài Phục ngâm
-        if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio # Can giờ thành Giáp
-        cung_data[5]['thien'] = can_gio # Giáp (ở Trung Cung) thành Can giờ
+        for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i] 
+        if p_hour_stem != 5: cung_data[p_hour_stem]['thien'] = luc_nghi_gio 
+        cung_data[5]['thien'] = can_gio 
         
     elif p_hour_stem == 5:
         # Trường hợp Đặc Biệt 2: Can Giờ nằm ở Trung Cung
-        for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i] # 8 cung vòng ngoài Phục ngâm
-        cung_data[p_circle]['thien'] = can_gio # Giáp (ở vòng ngoài) thành Can giờ
-        cung_data[5]['thien'] = luc_nghi_gio # Can giờ (ở Trung Cung) thành Giáp
+        for i in WOLONG_OUTER_PALACES: cung_data[i]['thien'] = dia_ban[i] 
+        cung_data[p_circle]['thien'] = can_gio 
+        cung_data[5]['thien'] = luc_nghi_gio 
         
     else:
-        # Trường hợp Bình Thường: Cả Giáp và Can Giờ đều bay ở 8 cung vòng ngoài
+        # Trường hợp Bình Thường
         idx_source = WOLONG_OUTER_PALACES.index(p_circle)
         idx_target = WOLONG_OUTER_PALACES.index(p_hour_stem)
         offset = (idx_target - idx_source) % 8
         for i in range(8):
             cung_data[WOLONG_OUTER_PALACES[i]]['thien'] = dia_ban[WOLONG_OUTER_PALACES[(i - offset) % 8]]
-        
-        # Bình thường, Trung cung giữ nguyên không đổi (Thiên Địa Đồng Bàn)
-        cung_data[5]['thien'] = dia_ban[5]
-            
+        cung_data[5]['thien'] = dia_ban[5] 
+
     # 3. BÁT MÔN 
     if p_circle == 5:
+        # Ngoại lệ 1a: Tuần thủ nhập Trung cung
         for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
     else:
         g_start = WOLONG_ORIGINAL_GATES[p_circle]
         s_steps = thien_can.index(can_gio) + 1
         seq = [1,2,3,4,5,6,7,8,9] if dun_type == "阳遁" else [9,8,7,6,5,4,3,2,1]
         p_land = seq[(seq.index(p_circle) + s_steps - 1) % 9]
+        
         if p_land == 5:
+            # Ngoại lệ 1b: Trực sử hạ cánh Trung cung
             for p, door in WOLONG_ORIGINAL_GATES.items(): cung_data[p]['mon'] = door
         else:
+            # Luồng bình thường
             idx_land = WOLONG_OUTER_PALACES.index(p_land)
             idx_gate = WOLONG_CLOCKWISE_GATES.index(g_start)
             for i in range(8):
                 cung_data[WOLONG_OUTER_PALACES[(idx_land + i) % 8]]['mon'] = WOLONG_CLOCKWISE_GATES[(idx_gate + i) % 8]
+
+    # Ngoại lệ 2: Khóa cứng Trung Cung theo yêu cầu Lập Hướng Thời Bàn Nhật Bản
+    cung_data[5]['mon'] = "杜门" if dun_type == "阳遁" else "开门"
 
     # 4. CỬU TINH
     luoshu_9 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -194,7 +184,7 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
         cung_data[luoshu_9[idx_new]]['sao'] = ORIGINAL_STARS[i]
     cung_data[5]['sao'] = "" 
 
-    # 5. BÁT THẦN
+    # 5. BÁT THẦN (Chuẩn xác theo sách Hojo Ikkou)
     anchor_palace = p_hour_stem
     if anchor_palace == 5:
         anchor_palace = 8 if dun_type == "阳遁" else 7
@@ -213,13 +203,10 @@ def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay, user_dt):
         cung_data[cung]['hour_star'] = curr_star
         curr_star = 1 if curr_star == 9 else curr_star + 1
 
-    slot = (user_dt.minute // 20) + 1
-    if user_dt.hour % 2 == 0: slot += 3
-    
-    return cung_data, p_circle, slot
+    return cung_data, p_circle
 
 # ==========================================
-# 4. MODULE PHÂN TÍCH CÁCH CỤC
+# 4. MODULE PHÂN TÍCH CÁCH CỤC (Hojo Ikkou)
 # ==========================================
 def qimen_analyzer_hojo(cung_data, can_tuan, truc_su_door):
     FORMATION_RANKS = {
@@ -235,10 +222,6 @@ def qimen_analyzer_hojo(cung_data, can_tuan, truc_su_door):
     }
     
     cung_status = {i: [] for i in range(1, 10)}
-    cung_3_elements = {i: [] for i in range(1, 10)} 
-
-    than_cung_data = {'值符':{1:'吉',2:'吉',3:'吉',4:'吉',5:'凶',6:'吉',7:'吉',8:'吉',9:'吉'}, '螣蛇':{1:'凶',2:'凶',3:'凶',4:'凶',5:'凶',6:'凶',7:'凶',8:'凶',9:'凶'}, '太阴':{1:'吉',2:'吉',3:'吉',4:'吉',5:'凶',6:'吉',7:'吉',8:'吉',9:'吉'}, '六合':{1:'吉',2:'吉',3:'吉',4:'吉',5:'凶',6:'吉',7:'吉',8:'吉',9:'吉'}, '勾陈':{1:'凶',2:'凶',3:'凶',4:'凶',5:'凶',6:'凶',7:'凶',8:'凶',9:'凶'}, '朱雀':{1:'凶',2:'凶',3:'凶',4:'凶',5:'凶',6:'凶',7:'凶',8:'凶',9:'凶'}, '九地':{1:'吉',2:'吉',3:'吉',4:'吉',5:'凶',6:'吉',7:'吉',8:'吉',9:'吉'}, '九天':{1:'吉',2:'吉',3:'吉',4:'吉',5:'凶',6:'吉',7:'吉',8:'吉',9:'吉'}}
-    mon_sao_data = {'休门':{'天蓬':'凶','天芮':'吉','天冲':'吉','天辅':'吉','天禽':'凶','天心':'吉','天柱':'吉','天任':'吉','天英':'凶'}, '生门':{'天蓬':'吉','天芮':'凶','天冲':'吉','天辅':'吉','天禽':'凶','天心':'吉','天柱':'吉','天任':'凶','天英':'吉'}, '伤门':{'天蓬':'凶','天芮':'凶','天冲':'凶','天辅':'凶','天禽':'凶','天心':'凶','天柱':'凶','天任':'凶','天英':'凶'}, '杜门':{'天蓬':'凶','天芮':'凶','天冲':'凶','天辅':'凶','天禽':'凶','天心':'凶','天柱':'凶','天任':'凶','天英':'凶'}, '景门':{'天蓬':'凶','天芮':'吉','天冲':'吉','天辅':'吉','天禽':'凶','天心':'吉','天柱':'吉','天任':'吉','天英':'凶'}, '死门':{'天蓬':'凶','天芮':'凶','天冲':'凶','天辅':'凶','天禽':'凶','天心':'凶','天柱':'凶','天任':'凶','天英':'凶'}, '惊门':{'天蓬':'凶','天芮':'凶','天冲':'凶','天辅':'凶','天禽':'凶','天心':'凶','天柱':'凶','天任':'凶','天英':'凶'}, '开门':{'天蓬':'吉','天芮':'吉','天冲':'吉','天辅':'凶','天禽':'凶','天心':'凶','天柱':'吉','天任':'吉','天英':'吉'}}
     can_can_data = {'甲':{'甲':'吉','乙':'吉','丙':'吉','丁':'吉','戊':'凶','己':'吉','庚':'大凶','辛':'凶','壬':'凶','癸':'吉'}, '乙':{'甲':'吉','乙':'凶','丙':'吉','丁':'吉','戊':'吉','己':'吉','庚':'凶','辛':'大凶','壬':'吉','癸':'凶'}, '丙':{'甲':'吉','乙':'吉','丙':'凶','丁':'吉','戊':'吉','己':'吉','庚':'大凶','辛':'吉','壬':'吉','癸':'凶'}, '丁':{'甲':'吉','乙':'吉','丙':'吉','丁':'吉','戊':'吉','己':'凶','庚':'吉','辛':'凶','壬':'吉','癸':'大凶'}, '戊':{'甲':'凶','乙':'吉','丙':'吉','丁':'吉','戊':'凶','己':'凶','庚':'凶','辛':'凶','壬':'吉','癸':'凶'}, '己':{'甲':'凶','乙':'吉','丙':'凶','丁':'凶','戊':'吉','己':'凶','庚':'凶','辛':'凶','壬':'凶','癸':'凶'}, '庚':{'甲':'大凶','乙':'凶','丙':'大凶','丁':'吉','戊':'凶','己':'大凶','庚':'大凶','辛':'凶','壬':'大凶','癸':'大凶'}, '辛':{'甲':'凶','乙':'大凶','丙':'凶','丁':'吉','戊':'凶','己':'凶','庚':'凶','辛':'凶','壬':'凶','癸':'凶'}, '壬':{'甲':'凶','乙':'凶','丙':'凶','丁':'吉','戊':'吉','己':'凶','庚':'凶','辛':'吉','壬':'凶','癸':'凶'}, '癸':{'甲':'吉','乙':'凶','丙':'吉','丁':'大凶','戊':'吉','己':'凶','庚':'大凶','辛':'凶','壬':'凶','癸':'凶'}}
 
     def get_actual(can): return '甲' if can == can_tuan else can
@@ -253,7 +236,7 @@ def qimen_analyzer_hojo(cung_data, can_tuan, truc_su_door):
         t_can = get_actual(raw_t)
         d_can = get_actual(raw_d)
         
-        mon, sao, than, phi_tinh = d['mon'], d['sao'], d['than'], d['hour_star']
+        mon, sao, than = d['mon'], d['sao'], d['than']
 
         # 1. CÁC CÁCH CỤC CÁT
         if t_can == '甲' and d_can == '丙': cung_status[p].append(("青竜返首", "#CC0000"))
@@ -315,50 +298,34 @@ def qimen_analyzer_hojo(cung_data, can_tuan, truc_su_door):
             if mon == sao_mon_goc[sao]: cung_status[p].append(("星門伏吟", "#000000"))
             elif mon == mon_doi_xung[sao_mon_goc[sao]]: cung_status[p].append(("星門反吟", "#000000"))
 
-        # 3. TRA 3 YẾU TỐ 
-        if t_can in can_can_data and d_can in can_can_data[t_can]: cung_3_elements[p].append(can_can_data[t_can][d_can])
-        if mon in mon_sao_data and sao in mon_sao_data[mon]: cung_3_elements[p].append(mon_sao_data[mon][sao])
-        if than in than_cung_data and phi_tinh in than_cung_data[than]: cung_3_elements[p].append(than_cung_data[than][phi_tinh])
+    # Phân tích Cát/Hung của Thiên Can + Địa Can để gửi ra UI tô màu
+    stem_colors = {i: "#000000" for i in range(1, 10)} # Mặc định là Đen
+    for p in range(1, 10):
+        if p == 5 or p not in cung_data: continue
+        t_can = '甲' if cung_data[p]['thien'] == can_tuan else cung_data[p]['thien']
+        d_can = '甲' if cung_data[p]['dia'] == can_tuan else cung_data[p]['dia']
+        if t_can in can_can_data and d_can in can_can_data[t_can]:
+            eval_res = can_can_data[t_can][d_can]
+            stem_colors[p] = "#000000" if "凶" in eval_res else "#CC0000" # Hung thì Đen, Cát thì Đỏ
 
+    # Format lại danh sách Cách cục (Ẩn các cách cục mức 3)
     for p in cung_status:
         cung_status[p].sort(key=lambda x: FORMATION_RANKS.get(x[0], 99))
         formatted_list = []
         for raw_name, color in cung_status[p]:
             rank = FORMATION_RANKS.get(raw_name)
+            if rank == 3: continue # ẨN CÁCH CỤC MỨC 3 THEO YÊU CẦU
             if rank: display_name = f"<span style='font-size: 0.8em; font-weight: normal; color: #666;'>({rank})</span> {raw_name}"
             else: display_name = raw_name
             formatted_list.append((display_name, color))
         cung_status[p] = formatted_list
 
-    return cung_status, cung_3_elements
+    return cung_status, stem_colors
 
 # ==========================================
 # 5. GIAO DIỆN HTML RENDER 
 # ==========================================
-def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, cung_status, cung_3_elements, user_birth_star, can_tuan):
-    upper_gate = cung_data[menh_cung]['mon'] if cung_data[menh_cung]['mon'] else "休门"
-    lower_gate = cung_data[p_circle]['mon'] if cung_data[p_circle]['mon'] else "生门"
-    upper_tri = GATE_TO_TRIGRAM.get(upper_gate, "天")
-    lower_tri = GATE_TO_TRIGRAM.get(lower_gate, "地")
-    
-    orig_lines = TRIGRAM_BIN[lower_tri] + TRIGRAM_BIN[upper_tri]
-    mut_lines = orig_lines.copy()
-    mut_lines[hao_dong - 1] = 1 - mut_lines[hao_dong - 1]
-    
-    mut_lower = BIN_TO_TRIGRAM[tuple(mut_lines[:3])]
-    mut_upper = BIN_TO_TRIGRAM[tuple(mut_lines[3:])]
-    
-    eval_res = EVAL_DICT.get(mut_upper, {}).get(mut_lower, "△")
-    hex_info = HEX_NAME_DICT.get((mut_upper, mut_lower), (0, "Không rõ"))
-    
-    hex_html = f"""
-        <div style="font-size:12px; font-weight:bold; color:#000; margin-bottom: 2px;">{hex_info[0]} {eval_res}</div>
-        <div style="font-size:30px; line-height:0.9; color:#b30000; margin-bottom: 2px;">
-            {TRIGRAM_UNICODE[mut_upper]}<br>{TRIGRAM_UNICODE[mut_lower]}
-        </div>
-        <div style="font-size:11px; font-weight:normal; color:#333;">{hex_info[1]}</div>
-    """
-
+def render_html_table(cung_data, cung_status, stem_colors, can_tuan):
     luoi_lac_thu = [[4, 9, 2], [3, 5, 7], [8, 1, 6]]
     html = """
     <style>
@@ -368,16 +335,15 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, c
             display: grid; grid-template-columns: auto auto 1fr; grid-template-rows: 22px 22px 22px;   
             column-gap: 15px; row-gap: 6px; height: 100%; min-height: 85px; align-content: start; margin-top: 5px; margin-left: 5px; 
         }
-        .item-than  { grid-column: 1 / span 2; grid-row: 1; font-size: 15px; color: #222; text-align: left; }
-        .item-tinh  { grid-column: 1; grid-row: 2; font-size: 15px; color: #222; text-align: left; }
-        .item-mon   { grid-column: 1; grid-row: 3; font-size: 15px; color: #222; text-align: left; }
+        /* THẦN - TINH - MÔN: Màu XÁM NHẸ */
+        .item-than  { grid-column: 1 / span 2; grid-row: 1; font-size: 15px; color: #999999; text-align: left; }
+        .item-tinh  { grid-column: 1; grid-row: 2; font-size: 15px; color: #999999; text-align: left; }
+        .item-mon   { grid-column: 1; grid-row: 3; font-size: 15px; color: #999999; text-align: left; }
         
         .bottom-left-phitinh { position: absolute; bottom: 3px; left: 5px; font-size: 15px; color: #555; font-weight: bold; }
-        .star-highlight { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 2px dashed #0000FF; border-radius: 50%; color: #0000FF; }
-        
-        .right-panel { position: absolute; right: 5px; top: 3px; display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: 12px;}
         .bottom-right-panel { position: absolute; right: 5px; bottom: 3px; display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: 11px;}
         .formation-item { margin-top: 1px; font-weight: bold; letter-spacing: 1px; color: #000; }
+        .top-right-hex { position: absolute; top: 6px; right: 8px; text-align: right; }
     </style>
     <table class="qmdj-table">
     """
@@ -386,54 +352,50 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, c
         html += "<tr>"
         for p in row:
             d = cung_data[p]
-            bg_color = "transparent"
-            if p == menh_cung:
-                bg_color = "#fff3cd" if is_redirected else "#e8e8e8"
-
-            h_star_val = d['hour_star']
-            if h_star_val == user_birth_star:
-                phi_tinh_html = f"<div class='bottom-left-phitinh'><span class='star-highlight'>{h_star_val}</span></div>"
-            else:
-                phi_tinh_html = f"<div class='bottom-left-phitinh'>{h_star_val}</div>"
-                
-            # Tạo style cho Thiên Can & Địa Can
-            t_can, d_can = d.get('thien', ''), d.get('dia', '')
             
-            # Chữ bình thường: Giữ nguyên gốc (độ dày 500, màu đỏ nhạt #a36666, cỡ 16px)
-            # Chữ chứa Giáp: Giữ nguyên cỡ 16px, in đậm (bold), màu đỏ tươi (#FF0000)
-            t_style = "font-weight: bold; color: #CC0000; font-size: 16px;" if t_can == can_tuan else "font-weight: 500; color: #a36666; font-size: 16px;"
-            d_style = "font-weight: bold; color: #CC0000; font-size: 16px;" if d_can == can_tuan else "font-weight: 500; color: #a36666; font-size: 16px;"
+            # XỬ LÝ MÀU CAN & GẠCH CHÂN GIÁP
+            t_can, d_can = d.get('thien', ''), d.get('dia', '')
+            base_color = stem_colors.get(p, "#000000") # Hung Đen, Cát Đỏ
+            
+            t_decor = "underline" if t_can == can_tuan else "none"
+            d_decor = "underline" if d_can == can_tuan else "none"
+            
+            t_style = f"font-weight: bold; color: {base_color}; font-size: 16px; text-decoration: {t_decor}; text-underline-offset: 4px; text-decoration-thickness: 2px;"
+            d_style = f"font-weight: bold; color: {base_color}; font-size: 16px; text-decoration: {d_decor}; text-underline-offset: 4px; text-decoration-thickness: 2px;"
 
             if p == 5:
+                # TRUNG CUNG: Trắng tinh, không có Quẻ, không bôi nền vàng
                 html += f"""
-                <td class="qmdj-td" style="background-color: {bg_color}; text-align: center;">
-                    {phi_tinh_html} 
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-                        {hex_html}
-                    </div>
-                    <!-- Đã bật hiển thị cả THIÊN BÀN (trên) và ĐỊA BÀN (dưới) ở Trung Cung -->
+                <td class="qmdj-td" style="background-color: transparent; text-align: center;">
+                    <div class='bottom-left-phitinh'>{d['hour_star']}</div>
                     <div style="position: absolute; bottom: 30px; right: 6px; {t_style}">{t_can}</div>
                     <div style="position: absolute; bottom: 6px; right: 6px; {d_style}">{d_can}</div>
                 </td>"""
             else:
-                # Tổ hợp 3 Cát Hung (Dòng 1: Cát Đỏ, Hung Đen)
-                combos_html = ""
-                for i, c in enumerate(cung_3_elements[p]):
-                    if i == 0:
-                        # Nếu chứa chữ "凶" (bao gồm 凶 và 大凶) thì in Đen đậm, còn lại (吉) in Đỏ đậm
-                        color = "#000000" if "凶" in c else "#CC0000"
-                        combos_html += f"<div style='font-weight: 900; color: {color}; margin-bottom: 2px;'>{c}</div>"
-                    else:
-                        combos_html += f"<div style='font-weight: 500; color: #666; margin-bottom: 2px;'>{c}</div>"
-                        
+                # TÍNH QUẺ CHO 8 CUNG VÒNG NGOÀI (Lập Hướng Thời Bàn)
+                out_upper_tri = TIEN_THIEN_MAP[p]
+                out_lower_tri = GATE_TO_TRIGRAM.get(d['mon'], "天")
+                
+                out_eval = EVAL_DICT.get(out_upper_tri, {}).get(out_lower_tri, "△")
+                out_hex_color = "#CC0000" if out_eval in ["〇", "△"] else "#000000"
+                out_hex_name = HEX_NAME_DICT.get((out_upper_tri, out_lower_tri), "Không rõ")
+                
+                outer_hex_html = f"""
+                <div class="top-right-hex">
+                    <div style="font-size:26px; line-height:0.85; color:{out_hex_color}; margin-bottom: 2px;">
+                        {TRIGRAM_UNICODE[out_upper_tri]}<br>{TRIGRAM_UNICODE[out_lower_tri]}
+                    </div>
+                    <div style="font-size:10px; font-weight:normal; color:#999999; letter-spacing: -0.5px;">{out_hex_name}</div>
+                </div>
+                """
+
                 form_html = "".join([f"<div class='formation-item' style='color:{f_color};'>{f_name}</div>" for f_name, f_color in cung_status[p]])
-                right_panel_html = f"<div class='right-panel'>{combos_html}</div>"
                 bottom_right_html = f"<div class='bottom-right-panel'>{form_html}</div>"
                 
                 html += f"""
-                <td class="qmdj-td" style="background-color: {bg_color};">
-                    {phi_tinh_html}
-                    {right_panel_html}
+                <td class="qmdj-td" style="background-color: transparent;">
+                    <div class='bottom-left-phitinh'>{d['hour_star']}</div>
+                    {outer_hex_html}
                     {bottom_right_html}
                     <div class="cell-main">
                         <div class="item-than">{d['than']}</div>
@@ -453,26 +415,22 @@ def render_html_table(cung_data, menh_cung, is_redirected, p_circle, hao_dong, c
 def get_current_vn_time(): return datetime.now(timezone(timedelta(hours=7)))
 if "init_dt" not in st.session_state: st.session_state.init_dt = get_current_vn_time()
 
-col1, col2, col3, col4, col5, col6 = st.columns([1.1, 0.8, 0.8, 1.2, 0.7, 0.7])
+col1, col2, col3 = st.columns([1, 1, 1])
 with col1: selected_date = st.date_input("Ngày Xem", value=st.session_state.init_dt.date(), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 with col2: selected_hour = st.selectbox("Giờ Xem", options=list(range(24)), index=st.session_state.init_dt.hour)
 with col3: selected_minute = st.selectbox("Phút Xem", options=list(range(60)), index=st.session_state.init_dt.minute)
-with col4: birth_date = st.date_input("Ngày Sinh", value=date(1993, 1, 7), min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
-with col5: birth_hour = st.selectbox("Giờ Sinh", options=list(range(24)), index=8)
-with col6: birth_minute = st.selectbox("Phút Sinh", options=list(range(60)), index=15)
 
-# --- CODE THÊM GIAO DIỆN TÙY CHỌN LẬP BÀN NHANH ---
+# --- THÊM GIAO DIỆN TÙY CHỌN LẬP BÀN NHANH ---
 hoa_giap_60 = [thien_can[i%10] + dia_chi[i%12] for i in range(60)]
 cuc_so_list = [f"阳遁{i}局" for i in range(1, 10)] + [f"阴遁{i}局" for i in range(1, 10)]
 
 st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
-# Tạo 4 cột: [Cột trống (3 phần), Nút 1 (2 phần), Nút 2 (2 phần), Cột trống (3 phần)]
-_, col_opt1, col_opt2, _ = st.columns([3, 1.2, 1.2, 3])
+_, col_opt1, col_opt2, _ = st.columns([3, 2.5, 2.5, 3])
 with col_opt1: 
-    manual_hoagiap = st.selectbox("干支", options=["Tùy Chọn"] + hoa_giap_60)
+    manual_hoagiap = st.selectbox("Tùy chọn Hoa Giáp (Giờ)", options=["Không dùng"] + hoa_giap_60)
 with col_opt2: 
-    manual_cucso = st.selectbox("局", options=["Tùy Chọn"] + cuc_so_list)
-# --------------------------------------------------a
+    manual_cucso = st.selectbox("Tùy chọn Cục Số", options=["Không dùng"] + cuc_so_list)
+# --------------------------------------------------
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
@@ -489,41 +447,29 @@ hoa_giap_hien_tai = can_gio + chi_gio
 
 wl_ju = calculate_correct_ju(wl_yuan, can_gio, chi_gio, wl_jieqi)
 
-# --- CODE GHI ĐÈ LOGIC NẾU NGƯỜI DÙNG CHỌN NÚT ---
-if manual_hoagiap != "Tùy Chọn":
+# --- GHI ĐÈ LOGIC NẾU NGƯỜI DÙNG CHỌN NÚT ---
+if manual_hoagiap != "Không dùng":
     can_gio = manual_hoagiap[0]
     chi_gio = manual_hoagiap[1]
     hoa_giap_hien_tai = manual_hoagiap
 
-if manual_cucso != "Tùy Chọn":
+if manual_cucso != "Không dùng":
     wl_dun = "阳遁" if "阳" in manual_cucso else "阴遁"
     wl_ju = int(manual_cucso.replace("阳遁", "").replace("阴遁", "").replace("局", ""))
 # ------------------------------------------------
 
-# Tính Mệnh Cung
-b_dt = datetime.combine(birth_date, datetime.min.time()).replace(hour=birth_hour, minute=birth_minute)
-b_actual_date = b_dt.date() + timedelta(days=1) if b_dt.hour >= 23 else b_dt.date()
-b_chi_idx = 0 if b_dt.hour >= 23 else (b_dt.hour + 1) // 2 % 12
-b_chi_gio = dia_chi[b_chi_idx]
-b_day_obj = sxtwl.fromSolar(b_actual_date.year, b_actual_date.month, b_actual_date.day)
-b_lunar_m = b_day_obj.getLunarMonth()
-
-b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
-user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
-menh_cung, is_redirected = calc_menh_cung(b_day_obj.getLunarYear(), b_lunar_m) 
-
 # TÍNH TOÁN BÀN LÕI
-data, p_circle, hao_dong = lap_que_wolong(can_gio, chi_gio, wl_dun, wl_ju, wl_chi, user_dt)
+data, p_circle = lap_que_wolong(can_gio, chi_gio, wl_dun, wl_ju, wl_chi)
 
 # XỬ LÝ CÁCH CỤC
 can_tuan = get_xun_leader(can_gio, chi_gio)
 truc_su_door = data[p_circle]['mon']
-cung_st, cung_3_el = qimen_analyzer_hojo(data, can_tuan, truc_su_door)
+cung_st, stem_colors = qimen_analyzer_hojo(data, can_tuan, truc_su_door)
 
 bazi_chuoi = f"农历 {lunar_m}月 {lunar_d}日 | {wl_can}{wl_chi} | {wl_jieqi} {wl_yuan}元"
 title = f"<h3 style='margin-bottom:8px; font-family:sans-serif; color: #1a1a1a; font-weight: normal; font-size: 18px; text-align: center;'>{bazi_chuoi}</h3>"
 sub_title = f"<h4 style='margin-top:0px; margin-bottom:15px; font-family:sans-serif; color: #555; font-weight: normal; font-size: 16px; text-align: center;'>{hoa_giap_hien_tai}时 | {wl_dun}{wl_ju}局</h4>"
-qimen_board_html = render_html_table(data, menh_cung, is_redirected, p_circle, hao_dong, cung_st, cung_3_el, user_birth_star, can_tuan)
+qimen_board_html = render_html_table(data, cung_st, stem_colors, can_tuan)
 
 combined_html = f"""<div style="display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 10px;"><div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 510px;">{title}{sub_title}{qimen_board_html}</div></div>"""
 st.components.v1.html(combined_html, height=550, scrolling=True)
@@ -672,7 +618,7 @@ if st.button("TÌM KIẾM", use_container_width=True):
                 can_gio_scan = get_wushu_dun(wl_can_s, c_gio_scan)
                 wl_ju_s = calculate_correct_ju(wl_yuan_s, can_gio_scan, c_gio_scan, wl_jieqi_s)
                 
-                scan_data, p_circle_scan, _ = lap_que_wolong(can_gio_scan, c_gio_scan, wl_dun_s, wl_ju_s, wl_chi_s, current_scan_dt)
+                scan_data, p_circle_scan = lap_que_wolong(can_gio_scan, c_gio_scan, wl_dun_s, wl_ju_s, wl_chi_s)
                 
                 can_tuan_scan = get_xun_leader(can_gio_scan, c_gio_scan)
                 ts_door_scan = scan_data[p_circle_scan]['mon']
