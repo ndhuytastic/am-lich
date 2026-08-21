@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone, date
 import warnings
 
 warnings.filterwarnings('ignore')
-st.set_page_config(page_title="Kỳ Môn Hojo Ikkou", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Ngọa Long Kỳ Môn", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
 # 1. DỮ LIỆU CƠ BẢN & HẰNG SỐ CHÂN TRUYỀN
@@ -101,7 +101,7 @@ def get_hour_nine_star(day_branch, hour_branch, dun_type):
     return 9 if res == 0 else res
 
 # ==========================================
-# 3. LẬP BÀN TOÁN HỌC (THẤU PHÁI)
+# 3. LẬP BÀN TOÁN HỌC
 # ==========================================
 def lap_que_wolong(can_gio, chi_gio, dun_type, ju_num, chi_ngay):
     cung_data = {i: {'dia': '', 'mon': '', 'thien': '', 'sao': '', 'than': '', 'hour_star': ''} for i in range(1, 10)}
@@ -433,9 +433,9 @@ cuc_so_list = [f"阳遁{i}局" for i in range(1, 10)] + [f"阴遁{i}局" for i i
 st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
 _, col_opt1, col_opt2, _ = st.columns([3, 2.5, 2.5, 3])
 with col_opt1: 
-    manual_hoagiap = st.selectbox("Tùy chọn Hoa Giáp (Giờ)", options=["Không dùng"] + hoa_giap_60)
+    manual_hoagiap = st.selectbox("Hoa Giáp", options=["Tùy Chọn"] + hoa_giap_60)
 with col_opt2: 
-    manual_cucso = st.selectbox("Tùy chọn Cục Số", options=["Không dùng"] + cuc_so_list)
+    manual_cucso = st.selectbox("Cục Số", options=["Tùy Chọn"] + cuc_so_list)
 
 user_dt = datetime.combine(selected_date, datetime.min.time()).replace(hour=selected_hour, minute=selected_minute)
 actual_date = user_dt.date() + timedelta(days=1) if user_dt.hour >= 23 else user_dt.date()
@@ -461,12 +461,12 @@ b_lunar_m = b_day_obj.getLunarMonth()
 b_wl_can, b_wl_chi, _, _, b_wl_dun = get_wolong_calendar_data(b_lunar_m, b_day_obj.getLunarDay())
 user_birth_star = get_hour_nine_star(b_wl_chi, b_chi_gio, b_wl_dun)
 
-if manual_hoagiap != "Không dùng":
+if manual_hoagiap != "Tùy Chọn":
     can_gio = manual_hoagiap[0]
     chi_gio = manual_hoagiap[1]
     hoa_giap_hien_tai = manual_hoagiap
 
-if manual_cucso != "Không dùng":
+if manual_cucso != "Tùy Chọn":
     wl_dun = "阳遁" if "阳" in manual_cucso else "阴遁"
     wl_ju = int(manual_cucso.replace("阳遁", "").replace("阴遁", "").replace("局", ""))
 
