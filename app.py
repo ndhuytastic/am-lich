@@ -510,7 +510,7 @@ FORMATION_RANKS_LOCAL = {
     "乙奇入墓": 2, "丙奇入墓": 2, "丁奇入墓": 2,
     "干伏吟": 2, "干反吟": 2, 
     "乙奇昇殿": 3, "丙奇昇殿": 3, "丁奇昇殿": 3,
-    "星門伏吟": 3, "星門反吟": 3, "八門受制": 3, "六儀撃刑": 3
+    "星門伏吟": 3, "星門反吟": 3, "八门受制": 3, "六儀撃刑": 3
 }
 
 def format_ui_list(raw_list):
@@ -578,9 +578,12 @@ with st.container():
     loc_cat_cach = c7.selectbox("吉格 (Cát Cách)", options=cat_cach_list)
     
     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-    c9, c10 = st.columns(2)
+    c9, c10, c11, c12 = st.columns(4)
     loc_tran_hung = c9.selectbox("鎮凶 (Trấn Hung)", options=tran_hung_list)
     loc_thoi_cat = c10.selectbox("催吉 (Thôi Cát)", options=thoi_cat_list)
+    # 2 Mục lựa chọn mới
+    loc_thien_thoi = c11.selectbox("天时 (Thiên Thời)", options=["", "Có"])
+    loc_dia_loi = c12.selectbox("地利 (Địa Lợi)", options=["", "Có"])
 
 def find_fulfilled_plan(plan_list, d_cung, status_cung, can_tuan_scan):
     for req in plan_list:
@@ -622,7 +625,7 @@ if st.button("TÌM KIẾM", use_container_width=True):
                     if (len(results_pa1) >= 5 or not pa1_reqs) and (len(results_pa2) >= 5 or not pa2_reqs): break
 
                 loops += 1
-                current_scan_dt += timedelta(hours=2)
+                current_scan_dt += timedelta(hours=2) # Nhảy thời gian theo Giờ (2 tiếng)
                 
                 s_date = current_scan_dt.date() + timedelta(days=1) if current_scan_dt.hour >= 23 else current_scan_dt.date()
                 c_gio_idx = 0 if current_scan_dt.hour >= 23 else (current_scan_dt.hour + 1) // 2 % 12
@@ -636,10 +639,13 @@ if st.button("TÌM KIẾM", use_container_width=True):
                 can_gio_scan = get_wushu_dun(wl_can_s, c_gio_scan)
                 wl_ju_s = calculate_correct_ju(wl_yuan_s, can_gio_scan, c_gio_scan, wl_jieqi_s)
                 
-                scan_data, p_circle_scan, _, p_land_scan = lap_que_wolong(can_gio_scan, c_gio_scan, wl_dun_s, wl_ju_s, wl_chi_s)
+                # CẬP NHẬT: Lấy biến cung_phi_tinh_scan từ hàm lap_que_wolong
+                scan_data, p_circle_scan, cung_phi_tinh_scan, p_land_scan = lap_que_wolong(can_gio_scan, c_gio_scan, wl_dun_s, wl_ju_s, wl_chi_s)
                 
                 can_tuan_scan = get_xun_leader(can_gio_scan, c_gio_scan)
-                cung_st_scan, _ = qimen_analyzer_hojo(scan_data, can_tuan_scan, p_land_scan)
+                
+                # CẬP NHẬT: Lấy biến stem_colors_scan từ hàm qimen_analyzer_hojo
+                cung_st_scan, stem_colors_scan = qimen_analyzer_hojo(scan_data, can_tuan_scan, p_land_scan)
                 
                 end_scan_dt = current_scan_dt + timedelta(hours=1, minutes=59)
                 time_str = f"{current_scan_dt.strftime('%d/%m %H:%M')} - {end_scan_dt.strftime('%H:%M')}"
@@ -661,6 +667,23 @@ if st.button("TÌM KIẾM", use_container_width=True):
                         if loc_than and d['than'] != loc_than: return False
                         if val_cat_cach:
                             if not any(val_cat_cach in item[0] for item in cung_st_scan[p]): return False
+                            
+                        # --- KIỂM TRA THIÊN THỜI ---
+                        if loc_thien_thoi == "Có":
+                            # "#000000" nghĩa là hung, "#CC0000" nghĩa là cát
+                            if stem_colors_scan.get(p, "#000000") == "#000000":
+                                return False
+                                
+                        # --- KIỂM TRA ĐỊA LỢI ---
+                        if loc_dia_loi == "Có":
+                            global_lower_gate = scan_data[cung_phi_tinh_scan]['mon']
+                            global_lower_tri = GATE_TO_TRIGRAM.get(global_lower_gate, "天")
+                            out_upper_tri = TIEN_THIEN_MAP.get(p, "天")
+                            out_eval = EVAL_DICT.get(out_upper_tri, {}).get(global_lower_tri, "✕")
+                            # Chỉ lấy Quẻ Cát (〇) hoặc Bình hòa (△)
+                            if out_eval not in ["〇", "△"]:
+                                return False
+                                
                         return True
 
                     if target_palace:
@@ -703,7 +726,7 @@ if st.button("TÌM KIẾM", use_container_width=True):
                     st.warning("Không tìm thấy thời điểm nào thỏa mãn điều kiện.")
             else:
                 if not results_pa1 and not results_pa2 and max_limit > 0:
-                    st.warning(f"Đã quét 1 năm nhưng không tìm thấy thời điểm nào có thể xử lý.")
+                    st.warning(f"Đã quét nhưng không tìm thấy thời điểm nào có thể xử lý.")
                 if results_pa1:
                     st.success(f"**Phương án 1 (Tìm thấy {len(results_pa1)}):**")
                     for idx, (t_str, canchi_str, cung_str, dung_cach) in enumerate(results_pa1):
